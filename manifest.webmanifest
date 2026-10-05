@@ -1,0 +1,32 @@
+{
+  "name": "User Control Center",
+  "short_name": "User Control Center",
+  "description": "Monitoring User & Approval — 2 Aplikasi",
+  "lang": "id-ID",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fb",
+  "theme_color": "#0754a6",
+  "icons": [
+    {
+      "src": "./assets/USER_CONTROL_CENTER_ANDROID_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/USER_CONTROL_CENTER_PC_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/USER_CONTROL_CENTER_PC_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
