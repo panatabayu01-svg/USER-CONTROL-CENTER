@@ -418,6 +418,10 @@
       background: #ffb000;
     }
 
+    .status-short {
+      display: none;
+    }
+
     /* ================================
        BUTTON
        ================================ */
@@ -1166,7 +1170,15 @@
         font-size: 12px;
       }
 
-      /* STATUS PENDING */
+      /* STATUS PENDING — HP: tampilkan singkat "Wait" */
+      .status-pending .status-full {
+        display: none;
+      }
+
+      .status-pending .status-short {
+        display: inline;
+      }
+
       .status-pending {
         max-width: 100%;
         padding: 4px 3px;
@@ -1841,7 +1853,8 @@
 
             <span class="status-dot"></span>
 
-            Menunggu Approval
+            <span class="status-full">Menunggu Approval</span>
+            <span class="status-short">Wait</span>
 
           </span>
 
