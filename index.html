@@ -1225,11 +1225,28 @@
         white-space: normal !important;
       }
 
-      /* LOADING */
+      /* LOADING — HP ONLY
+         Pastikan overlay dan teks loading selalu terlihat jelas.
+         Tidak mempengaruhi tampilan PC.
+      */
+      .loading {
+        background: rgba(3, 16, 31, .78) !important;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+      }
+
       .loading-box {
-        padding: 18px 22px;
-        border-radius: 12px;
-        font-size: 14px;
+        padding: 18px 24px !important;
+        min-width: 170px;
+        border-radius: 14px !important;
+        background: linear-gradient(135deg, #082640, #0b3152) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(0, 211, 255, .65) !important;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .55) !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        text-align: center;
+        text-shadow: 0 1px 3px rgba(0,0,0,.65);
       }
 
     }</style>
