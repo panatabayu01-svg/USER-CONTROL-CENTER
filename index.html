@@ -949,6 +949,54 @@
         overflow-wrap: anywhere;
         justify-content: center;
       }
+
+      /* =========================================================
+         PC ONLY — FIX KOLOM STATUS & AKSI
+         - Status "Menunggu Approval" tetap 1 baris
+         - Tombol Approve + Reject tetap sejajar
+         - Tidak mengubah tampilan HP
+         ========================================================= */
+      .section:nth-of-type(2) table th:nth-child(6),
+      .section:nth-of-type(2) table td:nth-child(6) {
+        white-space: nowrap !important;
+      }
+
+      .section:nth-of-type(2) .status-pending {
+        display: inline-flex !important;
+        flex-wrap: nowrap !important;
+        width: auto !important;
+        max-width: 100% !important;
+        padding: 7px 10px !important;
+        gap: 7px !important;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: clip;
+      }
+
+      .section:nth-of-type(2) table th:nth-child(7),
+      .section:nth-of-type(2) table td:nth-child(7) {
+        white-space: nowrap !important;
+      }
+
+      .section:nth-of-type(2) table td:nth-child(7) {
+        text-align: center !important;
+      }
+
+      .section:nth-of-type(2) table td:nth-child(7) .approve-btn,
+      .section:nth-of-type(2) table td:nth-child(7) .reject-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+        width: calc(50% - 6px) !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 2px !important;
+        padding: 9px 8px !important;
+        font-size: 13px !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+      }
     }
 
     /* ================================
