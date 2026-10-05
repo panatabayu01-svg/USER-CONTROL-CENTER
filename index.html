@@ -1249,7 +1249,7 @@
   left: 50%;
   top: 22px;
   transform: translateX(-50%) translateY(-18px);
-  z-index: 99999;
+  z-index: 2147483647 !important;
   width: min(420px, calc(100vw - 28px));
   box-sizing: border-box;
   padding: 14px 18px;
@@ -2107,8 +2107,10 @@
   // ==========================================
 
   let approvalPendingBaseline = null;
+  let approvalPendingCountBaseline = null;
   let approvalNotifyTimer = null;
   let approvalAudioContext = null;
+  let approvalNotificationReady = false;
 
   function pendingUserKey(user) {
     return [
@@ -2212,30 +2214,46 @@
   }
 
   function checkNewApprovalUsers(list) {
-    const current = list || [];
+    const current = Array.isArray(list) ? list : [];
+    const currentCount = current.length;
 
-    // Pemuatan pertama: hanya simpan baseline.
+    // Pemuatan pertama: simpan baseline saja.
     if (approvalPendingBaseline === null) {
       setApprovalPendingBaseline(current);
+      approvalPendingCountBaseline = currentCount;
       return;
     }
 
+    // Deteksi utama berdasarkan kenaikan jumlah pending.
+    // Ini sengaja tidak bergantung pada nama field ID dari Code.gs.
+    const countIncreased =
+      approvalPendingCountBaseline !== null &&
+      currentCount > approvalPendingCountBaseline;
+
+    // Deteksi kedua berdasarkan isi user, sebagai pengaman bila jumlah sama
+    // tetapi record pending berganti.
     const newUsers = current.filter(function (user) {
       return !approvalPendingBaseline.has(pendingUserKey(user));
     });
 
     setApprovalPendingBaseline(current);
+    approvalPendingCountBaseline = currentCount;
 
-    if (newUsers.length) {
-      showApprovalNotification(newUsers);
+    if (countIncreased || newUsers.length) {
+      const notifyUsers = newUsers.length ? newUsers : current.slice(-1);
+      showApprovalNotification(notifyUsers);
     }
   }
 
   // Browser biasanya mengizinkan suara setelah ada interaksi
   // pertama dari Owner. Popup tetap akan muncul jika suara
   // diblokir oleh kebijakan browser.
-  document.addEventListener('pointerdown', unlockApprovalSound, { once: true });
-  document.addEventListener('touchstart', unlockApprovalSound, { once: true });
+  function prepareApprovalNotification() {
+    approvalNotificationReady = true;
+    unlockApprovalSound();
+  }
+  document.addEventListener('pointerdown', prepareApprovalNotification, { once: true, passive: true });
+  document.addEventListener('touchstart', prepareApprovalNotification, { once: true, passive: true });
 
 
   // ==========================================
