@@ -1249,19 +1249,7 @@
         text-shadow: 0 1px 3px rgba(0,0,0,.65);
       }
 
-      /* PC ONLY — FINAL TEXT SIZE ADJUSTMENT
-         Tidak mempengaruhi HP karena berada di @media (min-width: 801px). */
-      .title {
-        font-size: 38px;
-      }
-
-      .section-title {
-        font-size: 24px;
-      }
-
-    }
-
-    </style>
+    }</style>
 </head>
 
 
@@ -2177,16 +2165,5 @@
       });
     }
   </script>
-<script>
-  // PC ONLY: judul jendela/aplikasi desktop. Tampilan HP tidak diubah.
-  (function () {
-    try {
-      if (window.matchMedia && window.matchMedia('(min-width: 801px)').matches) {
-        document.title = 'PT. PANATA BAYU NUGRAHA';
-      }
-    } catch (e) {}
-  })();
-</script>
-
 </body>
 </html>
