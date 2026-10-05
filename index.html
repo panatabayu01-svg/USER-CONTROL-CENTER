@@ -885,6 +885,48 @@
 
 
   // ==========================================
+  // BACKEND APPS SCRIPT
+  // ==========================================
+  // GitHub Pages tidak memiliki google.script.run.
+  // Komunikasi ke Apps Script dilakukan melalui JSONP.
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzMxMKTpS67QUTPcicJ48e_miLpc8p2NPHjZASXxpiMPYpdPxP4h3UtmCR2QvkWr3IYBQ/exec';
+
+  function apiCall(api, params) {
+    return new Promise(function(resolve, reject) {
+      const callbackName = 'uccCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+      window[callbackName] = function(result) {
+        cleanup();
+        if (result && result.success === false) {
+          reject(new Error(result.error || 'Request gagal.'));
+          return;
+        }
+        resolve(result);
+      };
+
+      const script = document.createElement('script');
+
+      function cleanup() {
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      script.onerror = function() {
+        cleanup();
+        reject(new Error('Tidak dapat terhubung ke server Apps Script.'));
+      };
+
+      const query = new URLSearchParams(params || {});
+      query.set('api', api);
+      query.set('callback', callbackName);
+      query.set('ts', Date.now());
+
+      script.src = API_URL + '?' + query.toString();
+      document.body.appendChild(script);
+    });
+  }
+
+  // ==========================================
   // LOAD DATA
   // ==========================================
 
@@ -892,30 +934,24 @@
 
     showLoading(true);
 
-    google.script.run
+    apiCall('getData')
 
-      .withSuccessHandler(function(result) {
+      .then(function(result) {
 
-        showLoading(false);
+        const data = result.data || {};
 
-        renderActive(
-          result.active || []
-        );
+        renderActive(data.active || []);
+        renderPending(data.pending || []);
 
-        renderPending(
-          result.pending || []
-        );
-
-        document.getElementById(
-          'pendingCount'
-        ).textContent =
-          (result.pending || []).length;
+        document.getElementById('pendingCount').textContent =
+          (data.pending || []).length;
 
         updateClock();
+        showLoading(false);
 
       })
 
-      .withFailureHandler(function(error) {
+      .catch(function(error) {
 
         showLoading(false);
 
@@ -924,9 +960,7 @@
           (error.message || error)
         );
 
-      })
-
-      .getControlCenterData();
+      });
 
   }
 
@@ -1178,33 +1212,19 @@
     disableRowButtons(button);
 
 
-    google.script.run
-
-      .withSuccessHandler(function(result) {
-
-        alert(
-          '✅ User berhasil APPROVED.'
-        );
-
+    apiCall('approve', {
+      aplikasi: aplikasi,
+      idDevice: idDevice
+    })
+      .then(function(result) {
+        alert('✅ User berhasil APPROVED.');
         loadData();
-
       })
-
-      .withFailureHandler(function(error) {
-
+      .catch(function(error) {
         enableRowButtons(button);
-
-        alert(
-          'Gagal Approve:\n' +
-          (error.message || error)
-        );
-
-      })
-
-      .approveUser(
-        aplikasi,
-        idDevice
-      );
+        alert('Gagal Approve:
+' + (error.message || error));
+      });
 
   }
 
@@ -1247,33 +1267,19 @@
     disableRowButtons(button);
 
 
-    google.script.run
-
-      .withSuccessHandler(function(result) {
-
-        alert(
-          '❌ User berhasil REJECTED.'
-        );
-
+    apiCall('reject', {
+      aplikasi: aplikasi,
+      idDevice: idDevice
+    })
+      .then(function(result) {
+        alert('❌ User berhasil REJECTED.');
         loadData();
-
       })
-
-      .withFailureHandler(function(error) {
-
+      .catch(function(error) {
         enableRowButtons(button);
-
-        alert(
-          'Gagal Reject:\n' +
-          (error.message || error)
-        );
-
-      })
-
-      .rejectUser(
-        aplikasi,
-        idDevice
-      );
+        alert('Gagal Reject:
+' + (error.message || error));
+      });
 
   }
 
