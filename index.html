@@ -1375,12 +1375,31 @@
           flex-basis: 88px;
         }
 
+        /* PC COMPACT — kecilkan teks agar seluruh tabel terbaca */
         .title {
-          font-size: 31px;
+          font-size: 25px;
+        }
+
+        .section-title {
+          font-size: 18px;
+        }
+
+        .active-count {
+          font-size: 14px;
+          padding: 9px 16px;
+        }
+
+        .waiting-count {
+          font-size: 14px;
+          padding: 9px 16px;
+        }
+
+        .waiting-count span {
+          font-size: 20px;
         }
 
         .subtitle {
-          font-size: 15px;
+          font-size: 13px;
         }
 
         .header-right {
@@ -1388,15 +1407,15 @@
         }
 
         .clock {
-          min-width: 220px;
-          padding-right: 18px;
-          font-size: 16px;
+          min-width: 185px;
+          padding-right: 14px;
+          font-size: 13px;
         }
 
         .refresh-btn {
-          min-width: 150px;
-          padding: 14px 20px;
-          font-size: 18px;
+          min-width: 125px;
+          padding: 11px 16px;
+          font-size: 15px;
         }
 
         .container {
@@ -1405,29 +1424,57 @@
         }
 
         th {
-          font-size: 16px;
-          padding-left: 8px;
-          padding-right: 8px;
+          font-size: 12px;
+          padding: 10px 6px;
         }
 
         td {
-          font-size: 15px;
-          padding-left: 7px;
-          padding-right: 7px;
+          font-size: 12px;
+          padding: 9px 5px;
         }
 
         .app-badge {
-          font-size: 15px;
-          padding-left: 10px;
-          padding-right: 10px;
+          font-size: 12px;
+          padding: 8px 7px;
+          min-width: 0;
         }
 
         .online-cell {
-          font-size: 15px;
+          font-size: 12px;
+          gap: 6px;
         }
 
         .duration-cell {
-          font-size: 15px;
+          font-size: 12px;
+          gap: 5px;
+        }
+
+        .duration-cell > span:first-child {
+          font-size: 17px;
+        }
+
+        .device-icon {
+          font-size: 27px;
+        }
+
+        .device-label {
+          font-size: 11px;
+        }
+
+        .approve-btn,
+        .reject-btn {
+          min-width: 0 !important;
+          font-size: 10px !important;
+          padding: 7px 5px !important;
+        }
+
+        .section:nth-of-type(2) .reject-btn {
+          margin-left: 3px;
+        }
+
+        .status-pending {
+          font-size: 10px;
+          padding: 5px 6px;
         }
       }
     }
