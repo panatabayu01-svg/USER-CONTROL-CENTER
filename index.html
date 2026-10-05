@@ -600,24 +600,6 @@
         line-height: 1.45;
       }
 
-      /* Icon kalender/tanggal — PC SAJA */
-      .clock::before {
-        content: "";
-        position: absolute;
-        left: -58px;
-        top: 8px;
-        width: 34px;
-        height: 29px;
-        box-sizing: border-box;
-        border: 3px solid #00e5ff;
-        border-radius: 5px;
-        background:
-          linear-gradient(#00e5ff, #00e5ff) 0 7px / 100% 3px no-repeat,
-          radial-gradient(circle at 8px 1px, #00e5ff 0 3px, transparent 3.5px),
-          radial-gradient(circle at 25px 1px, #00e5ff 0 3px, transparent 3.5px);
-        box-shadow: 0 0 10px rgba(0,229,255,.25);
-      }
-
       .refresh-btn {
         min-width: 190px;
         padding: 16px 28px;
@@ -2050,6 +2032,55 @@
 
 
   // ==========================================
+  // AUTO REFRESH
+  // PC + HP
+  // Refresh data silently so the user does not
+  // need to press the Refresh button when a new
+  // approval request arrives.
+  // ==========================================
+
+  let autoRefreshBusy = false;
+
+  function autoRefreshData() {
+
+    if (autoRefreshBusy) return;
+
+    autoRefreshBusy = true;
+
+    apiCall('getData')
+
+      .then(function(result) {
+
+        const data = result.data || {};
+
+        renderActive(data.active || []);
+        renderPending(data.pending || []);
+
+        const pendingCount =
+          document.getElementById('pendingCount');
+
+        if (pendingCount) {
+          pendingCount.textContent =
+            (data.pending || []).length;
+        }
+
+        updateClock();
+
+      })
+
+      .catch(function() {
+        // Auto refresh dibuat silent.
+        // Error background tidak mengganggu user.
+      })
+
+      .finally(function() {
+        autoRefreshBusy = false;
+      });
+
+  }
+
+
+  // ==========================================
   // CLOCK
   // ==========================================
 
@@ -2149,7 +2180,16 @@
       1000
     );
 
+    // Muat data langsung saat aplikasi pertama dibuka.
     loadData();
+
+    // Auto refresh PC + HP setiap 10 detik.
+    // Tidak menampilkan loading overlay dan tidak
+    // mengubah tampilan HP.
+    setInterval(
+      autoRefreshData,
+      10000
+    );
 
   };
 
