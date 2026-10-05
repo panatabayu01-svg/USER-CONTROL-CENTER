@@ -375,6 +375,10 @@
       font-weight: 700;
     }
 
+    .online-time-short {
+      display: none;
+    }
+
     /* ================================
        STATUS
        ================================ */
@@ -504,37 +508,71 @@
     }
 
     /* ================================
-       MOBILE
+       MOBILE — PRO COMPACT / NO HORIZONTAL SCROLL
+       Hanya mempengaruhi layar <= 800px.
+       Tampilan PC tidak diubah.
        ================================ */
 
     @media (max-width: 800px) {
 
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden !important;
+      }
+
+      body {
+        background:
+          radial-gradient(circle at 50% 0%, rgba(0,123,255,.20), transparent 34%),
+          #07182c;
+        color: #f4f8ff;
+      }
+
+      /* HEADER */
       .header {
-        padding: 18px;
-        align-items: flex-start;
+        min-height: 0;
+        padding: 15px 12px 16px;
+        gap: 8px;
+        align-items: center;
+        background:
+          linear-gradient(125deg, #031c43 0%, #0754a6 55%, #087bd1 100%);
+        box-shadow: 0 5px 18px rgba(0,0,0,.28);
+      }
+
+      .header-left {
+        min-width: 0;
+        gap: 10px;
+        flex: 1 1 auto;
       }
 
       .header-icon {
-        width: 48px;
-        height: 48px;
-        flex-basis: 48px;
+        width: 50px;
+        height: 50px;
+        flex: 0 0 50px;
       }
 
       .header-icon img {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
       }
 
       .title {
-        font-size: 21px;
+        font-size: 19px;
+        line-height: 1.05;
+        margin-bottom: 5px;
+        letter-spacing: .2px;
       }
 
       .subtitle {
-        font-size: 13px;
+        font-size: 11px;
+        line-height: 1.25;
+        max-width: 190px;
       }
 
       .header-right {
-        gap: 8px;
+        flex: 0 0 auto;
+        gap: 0;
       }
 
       .clock {
@@ -542,63 +580,319 @@
       }
 
       .refresh-btn {
-        padding: 11px 15px;
-        font-size: 14px;
-      }
-
-      .container {
-        padding: 12px;
-      }
-
-      .section-title {
-        padding: 13px 14px;
-        min-height: 58px;
-        font-size: 17px;
-      }
-
-      .active-count {
-        padding: 7px 11px;
+        padding: 10px 12px;
+        min-width: 74px;
+        border-radius: 10px;
         font-size: 12px;
+        line-height: 1.1;
+      }
+
+      /* MAIN */
+      .container {
+        width: 100%;
+        max-width: 100%;
+        padding: 10px 8px 18px;
+        margin: 0;
+      }
+
+      .section {
+        width: 100%;
+        margin-bottom: 12px;
+        border: 1px solid rgba(72,177,255,.25);
+        border-radius: 15px;
+        background: #0a2239;
+        box-shadow: 0 5px 16px rgba(0,0,0,.22);
+      }
+
+      /* SECTION HEADER */
+      .section-title {
+        min-height: 58px;
+        padding: 10px 11px;
+        font-size: 15px;
+        line-height: 1.15;
+        color: #f4f8ff !important;
+      }
+
+      .section-title.green {
+        background: linear-gradient(100deg, #0b3345, #0b293b);
+      }
+
+      .section-title.orange {
+        background: linear-gradient(100deg, #39270b, #2c210e);
+      }
+
+      .section-title-left {
+        min-width: 0;
+        gap: 9px;
+      }
+
+      .section-title-left > div:last-child {
+        max-width: 205px;
       }
 
       .section-icon {
-        font-size: 25px;
+        width: 29px;
+        height: 29px;
+        flex: 0 0 29px;
+        font-size: 23px;
+      }
+
+      .active-count {
+        flex: 0 0 auto;
+        gap: 5px;
+        padding: 7px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        line-height: 1.05;
+        background: #104d49;
+        color: #7fffd4;
+        box-shadow: inset 0 0 0 1px rgba(50,255,190,.15);
+      }
+
+      .active-count-icon {
+        font-size: 15px;
       }
 
       .waiting-count {
-        padding: 7px 12px;
-        font-size: 13px;
+        flex: 0 0 auto;
+        padding: 7px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        line-height: 1.05;
+        background: #4a3412;
+        color: #ffe4a2;
       }
 
       .waiting-count span {
-        font-size: 18px;
+        font-size: 17px;
+        margin-left: 3px;
+      }
+
+      /* TABLE — FIXED WIDTH, SEMUA KOLOM MASUK LAYAR */
+      .table-wrap {
+        width: 100%;
+        padding: 7px 7px 9px;
+        overflow-x: hidden !important;
+        overflow-y: visible;
+      }
+
+      table {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+        border-color: rgba(82,161,224,.22);
+        background: #081d31;
       }
 
       th {
-        font-size: 13px;
-        padding: 11px;
+        padding: 8px 3px;
+        height: 42px;
+        font-size: 9.5px;
+        line-height: 1.05;
+        white-space: normal !important;
+        word-break: normal;
+        overflow-wrap: anywhere;
+        background: #102d48;
+        color: #eaf5ff;
+        border-color: rgba(82,161,224,.18);
       }
 
       td {
-        font-size: 13px;
-        padding: 11px;
+        padding: 7px 3px;
+        height: 55px;
+        font-size: 10.5px;
+        line-height: 1.05;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: normal;
+        color: #f1f7ff;
+        background: #0a2035;
+        border-color: rgba(82,161,224,.15);
       }
 
+      /* ACTIVE: 6 kolom */
+      .section:first-of-type table th:nth-child(1),
+      .section:first-of-type table td:nth-child(1) { width: 7%; }
+
+      .section:first-of-type table th:nth-child(2),
+      .section:first-of-type table td:nth-child(2) { width: 25%; }
+
+      .section:first-of-type table th:nth-child(3),
+      .section:first-of-type table td:nth-child(3) { width: 19%; }
+
+      .section:first-of-type table th:nth-child(4),
+      .section:first-of-type table td:nth-child(4) { width: 12%; }
+
+      .section:first-of-type table th:nth-child(5),
+      .section:first-of-type table td:nth-child(5) { width: 21%; }
+
+      .section:first-of-type table th:nth-child(6),
+      .section:first-of-type table td:nth-child(6) { width: 16%; }
+
+      /* PENDING: 7 kolom */
+      .section:nth-of-type(2) table th:nth-child(1),
+      .section:nth-of-type(2) table td:nth-child(1) { width: 6%; }
+
+      .section:nth-of-type(2) table th:nth-child(2),
+      .section:nth-of-type(2) table td:nth-child(2) { width: 18%; }
+
+      .section:nth-of-type(2) table th:nth-child(3),
+      .section:nth-of-type(2) table td:nth-child(3) { width: 17%; }
+
+      .section:nth-of-type(2) table th:nth-child(4),
+      .section:nth-of-type(2) table td:nth-child(4) { width: 11%; }
+
+      .section:nth-of-type(2) table th:nth-child(5),
+      .section:nth-of-type(2) table td:nth-child(5) { width: 16%; }
+
+      .section:nth-of-type(2) table th:nth-child(6),
+      .section:nth-of-type(2) table td:nth-child(6) { width: 14%; }
+
+      .section:nth-of-type(2) table th:nth-child(7),
+      .section:nth-of-type(2) table td:nth-child(7) { width: 18%; }
+
+      /* APP BADGE */
       .app-badge {
-        font-size: 12px;
-        padding: 7px 10px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 6px 3px;
+        gap: 2px;
+        border-radius: 7px;
+        font-size: 9px;
+        line-height: 1.05;
+        white-space: normal;
+        overflow-wrap: anywhere;
       }
 
+      .app-badge > span:first-child {
+        font-size: 13px;
+        flex: 0 0 auto;
+      }
+
+      .app-ekspedisi {
+        background: #0c4277;
+        color: #8bd0ff;
+      }
+
+      .app-monitoring {
+        background: #0c4b3b;
+        color: #82f2be;
+      }
+
+      /* DEVICE */
+      .device-cell {
+        min-width: 0;
+        width: 100%;
+        gap: 1px;
+      }
+
+      .device-icon {
+        font-size: 21px;
+      }
+
+      .device-label {
+        font-size: 9px;
+        color: #eaf5ff;
+      }
+
+      /* ONLINE */
+      .online-cell {
+        width: 100%;
+        max-width: 100%;
+        gap: 4px;
+        font-size: 9.5px;
+        color: #42e895;
+        line-height: 1.05;
+        white-space: normal;
+      }
+
+      .online-dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 8px;
+        box-shadow: 0 0 0 2px rgba(32,207,122,.13);
+      }
+
+      .online-time-full {
+        display: none;
+      }
+
+      .online-time-short {
+        display: inline;
+      }
+
+      /* DURASI */
+      .duration-cell {
+        width: 100%;
+        gap: 3px;
+        font-size: 9px;
+        color: #72c9ff;
+        line-height: 1.05;
+      }
+
+      .duration-cell > span:first-child {
+        font-size: 12px;
+      }
+
+      /* STATUS PENDING */
+      .status-pending {
+        max-width: 100%;
+        padding: 4px 3px;
+        gap: 3px;
+        border-radius: 7px;
+        font-size: 8px;
+        line-height: 1.05;
+        white-space: normal;
+        background: #493614;
+        color: #ffd779;
+      }
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+      }
+
+      /* APPROVE / REJECT — tetap berfungsi, dibuat compact */
       .approve-btn,
       .reject-btn {
-        min-width: 95px;
-        padding: 9px 12px;
-        font-size: 12px;
+        display: block;
+        width: 100%;
+        min-width: 0;
+        margin: 2px 0 !important;
+        padding: 5px 2px;
+        border-radius: 5px;
+        font-size: 8px;
+        line-height: 1.05;
       }
 
-    }
+      .approve-btn {
+        background: #079b5a;
+      }
 
-  </style>
+      .reject-btn {
+        background: #e52a35;
+      }
+
+      /* EMPTY */
+      .empty {
+        padding: 25px 8px;
+        font-size: 11px;
+        line-height: 1.25;
+        color: #8ca7c2;
+        white-space: normal !important;
+      }
+
+      /* LOADING */
+      .loading-box {
+        padding: 18px 22px;
+        border-radius: 12px;
+        font-size: 14px;
+      }
+
+    }</style>
 </head>
 
 
@@ -1037,9 +1331,27 @@
   }
 
 
+
   // ==========================================
   // USER AKTIF
   // ==========================================
+
+  // ==========================================
+  // WAKTU ONLINE — TAMPILAN COMPACT HP
+  // ==========================================
+
+  function shortOnlineTime(value) {
+
+    const text = String(value || '').trim();
+    const match = text.match(/(\d{1,2}:\d{2})(?::\d{2})?$/);
+
+    if (match) {
+      return match[1];
+    }
+
+    return text;
+
+  }
 
   function renderActive(data) {
 
@@ -1098,7 +1410,8 @@
         <td>
           <span class="online-cell">
             <span class="online-dot"></span>
-            ${escapeHtml(user.lastOnline)}
+            <span class="online-time-full">${escapeHtml(user.lastOnline)}</span>
+            <span class="online-time-short">${escapeHtml(shortOnlineTime(user.lastOnline))}</span>
           </span>
         </td>
 
