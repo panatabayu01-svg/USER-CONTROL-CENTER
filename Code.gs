@@ -885,81 +885,37 @@
 
 
   // ==========================================
-  // LOAD DATA — GITHUB PAGES API
+  // LOAD DATA
   // ==========================================
-
-  const API_URL = 'https://script.google.com/macros/s/AKfycbzMxMKTpS67QUTPcicJ48e_miLpc8p2NPHjZASXxpiMPYpdPxP4h3UtmCR2QvkWr3IYBQ/exec';
-
-  function callApi(action, params, success, failure) {
-
-    const callbackName = '__uccApi_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-    const script = document.createElement('script');
-    const query = new URLSearchParams();
-
-    query.set('action', action);
-    query.set('callback', callbackName);
-
-    Object.keys(params || {}).forEach(function(key) {
-      query.set(key, params[key] == null ? '' : String(params[key]));
-    });
-
-    let finished = false;
-    const cleanup = function() {
-      finished = true;
-      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-
-    const timer = setTimeout(function() {
-      if (finished) return;
-      cleanup();
-      if (failure) failure(new Error('Server terlalu lama merespons.'));
-    }, 20000);
-
-    window[callbackName] = function(response) {
-      if (finished) return;
-      clearTimeout(timer);
-      cleanup();
-
-      if (response && response.success) {
-        if (success) success(response.data);
-      } else {
-        if (failure) failure(new Error((response && response.error) || 'Gagal memproses permintaan.'));
-      }
-    };
-
-    script.onerror = function() {
-      if (finished) return;
-      clearTimeout(timer);
-      cleanup();
-      if (failure) failure(new Error('Koneksi ke server Google Apps Script gagal.'));
-    };
-
-    script.src = API_URL + '?' + query.toString();
-    document.body.appendChild(script);
-  }
 
   function loadData() {
 
     showLoading(true);
 
-    callApi(
-      'getControlCenterData',
-      {},
-      function(result) {
+    google.script.run
+
+      .withSuccessHandler(function(result) {
 
         showLoading(false);
 
-        renderActive(result.active || []);
-        renderPending(result.pending || []);
+        renderActive(
+          result.active || []
+        );
 
-        document.getElementById('pendingCount').textContent =
+        renderPending(
+          result.pending || []
+        );
+
+        document.getElementById(
+          'pendingCount'
+        ).textContent =
           (result.pending || []).length;
 
         updateClock();
 
-      },
-      function(error) {
+      })
+
+      .withFailureHandler(function(error) {
 
         showLoading(false);
 
@@ -968,8 +924,9 @@
           (error.message || error)
         );
 
-      }
-    );
+      })
+
+      .getControlCenterData();
 
   }
 
@@ -1221,10 +1178,9 @@
     disableRowButtons(button);
 
 
-    callApi(
-      'approveUser',
-      { aplikasi: aplikasi, idDevice: idDevice },
-      function(result) {
+    google.script.run
+
+      .withSuccessHandler(function(result) {
 
         alert(
           '✅ User berhasil APPROVED.'
@@ -1232,8 +1188,9 @@
 
         loadData();
 
-      },
-      function(error) {
+      })
+
+      .withFailureHandler(function(error) {
 
         enableRowButtons(button);
 
@@ -1242,8 +1199,12 @@
           (error.message || error)
         );
 
-      }
-    );
+      })
+
+      .approveUser(
+        aplikasi,
+        idDevice
+      );
 
   }
 
@@ -1286,10 +1247,9 @@
     disableRowButtons(button);
 
 
-    callApi(
-      'rejectUser',
-      { aplikasi: aplikasi, idDevice: idDevice },
-      function(result) {
+    google.script.run
+
+      .withSuccessHandler(function(result) {
 
         alert(
           '❌ User berhasil REJECTED.'
@@ -1297,8 +1257,9 @@
 
         loadData();
 
-      },
-      function(error) {
+      })
+
+      .withFailureHandler(function(error) {
 
         enableRowButtons(button);
 
@@ -1307,8 +1268,12 @@
           (error.message || error)
         );
 
-      }
-    );
+      })
+
+      .rejectUser(
+        aplikasi,
+        idDevice
+      );
 
   }
 
