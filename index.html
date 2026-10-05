@@ -600,14 +600,22 @@
         line-height: 1.45;
       }
 
+      /* Icon kalender/tanggal — PC SAJA */
       .clock::before {
-        content: "▣";
+        content: "";
         position: absolute;
         left: -58px;
         top: 8px;
-        color: #00e5ff;
-        font-size: 36px;
-        line-height: 1;
+        width: 34px;
+        height: 29px;
+        box-sizing: border-box;
+        border: 3px solid #00e5ff;
+        border-radius: 5px;
+        background:
+          linear-gradient(#00e5ff, #00e5ff) 0 7px / 100% 3px no-repeat,
+          radial-gradient(circle at 8px 1px, #00e5ff 0 3px, transparent 3.5px),
+          radial-gradient(circle at 25px 1px, #00e5ff 0 3px, transparent 3.5px);
+        box-shadow: 0 0 10px rgba(0,229,255,.25);
       }
 
       .refresh-btn {
