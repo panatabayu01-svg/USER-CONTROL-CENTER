@@ -1251,7 +1251,188 @@
         text-shadow: 0 1px 3px rgba(0,0,0,.65);
       }
 
-    }</style>
+    }
+    /* =========================================================
+       PC PATCH — FIT TO WINDOW / TANPA SCROLL KANAN-KIRI
+       HANYA layar PC (>800px). HP TIDAK DISENTUH.
+       ========================================================= */
+    @media (min-width: 801px) {
+
+      html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden !important;
+      }
+
+      .container {
+        width: min(100%, 1320px);
+        max-width: 1320px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .table-wrap {
+        width: 100%;
+        overflow-x: hidden !important;
+      }
+
+      .table-wrap table {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+      }
+
+      /* ACTIVE USER — 6 kolom */
+      .section:first-of-type table th:nth-child(1),
+      .section:first-of-type table td:nth-child(1) { width: 6%; }
+
+      .section:first-of-type table th:nth-child(2),
+      .section:first-of-type table td:nth-child(2) { width: 24%; }
+
+      .section:first-of-type table th:nth-child(3),
+      .section:first-of-type table td:nth-child(3) { width: 15%; }
+
+      .section:first-of-type table th:nth-child(4),
+      .section:first-of-type table td:nth-child(4) { width: 10%; }
+
+      .section:first-of-type table th:nth-child(5),
+      .section:first-of-type table td:nth-child(5) { width: 29%; }
+
+      .section:first-of-type table th:nth-child(6),
+      .section:first-of-type table td:nth-child(6) { width: 16%; }
+
+      /* PENDING APPROVAL — 7 kolom */
+      .section:nth-of-type(2) table th:nth-child(1),
+      .section:nth-of-type(2) table td:nth-child(1) { width: 6%; }
+
+      .section:nth-of-type(2) table th:nth-child(2),
+      .section:nth-of-type(2) table td:nth-child(2) { width: 20%; }
+
+      .section:nth-of-type(2) table th:nth-child(3),
+      .section:nth-of-type(2) table td:nth-child(3) { width: 14%; }
+
+      .section:nth-of-type(2) table th:nth-child(4),
+      .section:nth-of-type(2) table td:nth-child(4) { width: 10%; }
+
+      .section:nth-of-type(2) table th:nth-child(5),
+      .section:nth-of-type(2) table td:nth-child(5) { width: 20%; }
+
+      .section:nth-of-type(2) table th:nth-child(6),
+      .section:nth-of-type(2) table td:nth-child(6) { width: 12%; }
+
+      .section:nth-of-type(2) table th:nth-child(7),
+      .section:nth-of-type(2) table td:nth-child(7) { width: 18%; }
+
+      .section:first-of-type .app-badge,
+      .section:nth-of-type(2) .app-badge {
+        min-width: 0;
+        width: min(100%, 270px);
+        max-width: 100%;
+        white-space: nowrap;
+      }
+
+      .section:nth-of-type(2) .approve-btn,
+      .section:nth-of-type(2) .reject-btn {
+        min-width: 0;
+        width: calc(50% - 4px);
+        padding-left: 8px;
+        padding-right: 8px;
+        font-size: 13px;
+      }
+
+      .section:nth-of-type(2) .reject-btn {
+        margin-left: 6px;
+      }
+
+      /* Isi tabel tetap terbaca, tetapi tidak memaksa lebar tabel. */
+      .section:first-of-type td,
+      .section:nth-of-type(2) td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .section:first-of-type .online-cell {
+        white-space: nowrap;
+      }
+
+      /* Pada PC kecil, header dipadatkan sedikit agar tidak memaksa lebar. */
+      @media (min-width: 801px) and (max-width: 1200px) {
+        .header {
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+
+        .header-left {
+          gap: 14px;
+        }
+
+        .header-icon {
+          width: 88px;
+          height: 84px;
+          flex-basis: 88px;
+        }
+
+        .title {
+          font-size: 31px;
+        }
+
+        .subtitle {
+          font-size: 15px;
+        }
+
+        .header-right {
+          gap: 14px;
+        }
+
+        .clock {
+          min-width: 220px;
+          padding-right: 18px;
+          font-size: 16px;
+        }
+
+        .refresh-btn {
+          min-width: 150px;
+          padding: 14px 20px;
+          font-size: 18px;
+        }
+
+        .container {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        th {
+          font-size: 16px;
+          padding-left: 8px;
+          padding-right: 8px;
+        }
+
+        td {
+          font-size: 15px;
+          padding-left: 7px;
+          padding-right: 7px;
+        }
+
+        .app-badge {
+          font-size: 15px;
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .online-cell {
+          font-size: 15px;
+        }
+
+        .duration-cell {
+          font-size: 15px;
+        }
+      }
+    }
+
+</style>
 </head>
 
 
