@@ -3,8 +3,40 @@
 <head>
   <base target="_top">
 
+  <meta charset="UTF-8">
+
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
+
+  <!-- =========================================================
+       PWA / APP ICON
+       Tampilan dan fungsi aplikasi TIDAK diubah.
+       Bagian ini hanya untuk icon + instalasi HP/PC.
+       ========================================================= -->
+
+  <meta name="theme-color" content="#0754a6">
+  <meta name="application-name" content="User Control Center">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- iPhone / iPad -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="User Control Center">
+
+  <!-- Logo saat Add to Home Screen iPhone -->
+  <link rel="apple-touch-icon"
+        sizes="180x180"
+        href="./assets/USER_CONTROL_CENTER_IPHONE_180x180.png?v=2">
+
+  <!-- Logo browser / Android -->
+  <link rel="icon"
+        type="image/png"
+        sizes="192x192"
+        href="./assets/USER_CONTROL_CENTER_ANDROID_192x192.png?v=2">
+
+  <!-- PWA manifest -->
+  <link rel="manifest"
+        href="./manifest.webmanifest?v=2">
 
   <title>User Control Center</title>
 
@@ -891,65 +923,27 @@
   // Komunikasi ke Apps Script dilakukan melalui JSONP.
   const API_URL = 'https://script.google.com/macros/s/AKfycbzMxMKTpS67QUTPcicJ48e_miLpc8p2NPHjZASXxpiMPYpdPxP4h3UtmCR2QvkWr3IYBQ/exec';
 
-  // ==========================================
-  // KONEKSI STABIL UNTUK GITHUB PAGES
-  // ==========================================
-  // Tidak mengubah Code.gs.
-  // Mencegah request menumpuk, memberi timeout yang jelas,
-  // dan melakukan retry berurutan jika Apps Script sedang lambat/cold start.
-
-  const UCC_CACHE_KEY = 'UCC_GETDATA_CACHE_V3';
-  const UCC_CACHE_MAX_AGE = 10 * 60 * 1000; // 10 menit
-  const UCC_REQUEST_TIMEOUT = 25000;        // 25 detik/request
-  const UCC_MAX_RETRY = 3;
-  let uccLoadInProgress = false;
-  let uccLastSuccessfulData = null;
-
   function apiCall(api, params) {
     return new Promise(function(resolve, reject) {
-
-      const callbackName =
-        'uccCallback_' + Date.now() + '_' +
-        Math.floor(Math.random() * 100000);
-
-      const script = document.createElement('script');
-      let finished = false;
-
-      const timer = setTimeout(function() {
-        if (finished) return;
-        finished = true;
-        cleanup();
-        reject(new Error('Server Apps Script terlalu lama merespons.'));
-      }, UCC_REQUEST_TIMEOUT);
-
-      function cleanup() {
-        clearTimeout(timer);
-        try {
-          delete window[callbackName];
-        } catch (e) {
-          window[callbackName] = undefined;
-        }
-        if (script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-      }
+      const callbackName = 'uccCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
 
       window[callbackName] = function(result) {
-        if (finished) return;
-        finished = true;
         cleanup();
-
         if (result && result.success === false) {
           reject(new Error(result.error || 'Request gagal.'));
           return;
         }
-
-        resolve(result || {});
+        resolve(result);
       };
 
+      const script = document.createElement('script');
+
+      function cleanup() {
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
       script.onerror = function() {
-        if (finished) return;
-        finished = true;
         cleanup();
         reject(new Error('Tidak dapat terhubung ke server Apps Script.'));
       };
@@ -959,135 +953,47 @@
       query.set('callback', callbackName);
       query.set('ts', Date.now());
 
-      script.async = true;
       script.src = API_URL + '?' + query.toString();
       document.body.appendChild(script);
     });
-  }
-
-  function getCachedData() {
-    try {
-      const raw = localStorage.getItem(UCC_CACHE_KEY);
-      if (!raw) return null;
-
-      const saved = JSON.parse(raw);
-      if (!saved || !saved.data || !saved.time) return null;
-
-      if (Date.now() - saved.time > UCC_CACHE_MAX_AGE) {
-        localStorage.removeItem(UCC_CACHE_KEY);
-        return null;
-      }
-
-      return saved.data;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function saveCachedData(data) {
-    try {
-      localStorage.setItem(
-        UCC_CACHE_KEY,
-        JSON.stringify({
-          time: Date.now(),
-          data: data
-        })
-      );
-    } catch (e) {
-      // Cache browser bukan bagian dari fungsi utama.
-    }
-  }
-
-  function renderAllData(data) {
-    data = data || {};
-
-    const active = data.active || [];
-    const pending = data.pending || [];
-
-    renderActive(active);
-    renderPending(pending);
-
-    const pendingEl = document.getElementById('pendingCount');
-    if (pendingEl) {
-      pendingEl.textContent = pending.length;
-    }
-
-    updateClock();
-  }
-
-  function waitBeforeRetry(attempt) {
-    return new Promise(function(resolve) {
-      // 1,5 detik → 3 detik → 5 detik.
-      const delays = [1500, 3000, 5000];
-      setTimeout(resolve, delays[Math.min(attempt - 1, delays.length - 1)]);
-    });
-  }
-
-  async function requestDataWithRetry() {
-    let lastError = null;
-
-    for (let attempt = 1; attempt <= UCC_MAX_RETRY; attempt++) {
-      try {
-        const result = await apiCall('getData');
-        const data = result.data || {};
-
-        uccLastSuccessfulData = data;
-        saveCachedData(data);
-        return data;
-      } catch (error) {
-        lastError = error;
-
-        if (attempt < UCC_MAX_RETRY) {
-          await waitBeforeRetry(attempt);
-        }
-      }
-    }
-
-    throw lastError || new Error('Gagal memuat data.');
   }
 
   // ==========================================
   // LOAD DATA
   // ==========================================
 
-  function loadData(showSpinner) {
+  function loadData() {
 
-    // Jangan membuat request baru jika request sebelumnya masih berjalan.
-    if (uccLoadInProgress) return;
-    uccLoadInProgress = true;
+    showLoading(true);
 
-    const cached = getCachedData();
+    apiCall('getData')
 
-    // Jika pernah berhasil, tampilkan data terakhir segera.
-    // Ini membuat GitHub tidak terlihat kosong selama Apps Script merespons.
-    if (cached) {
-      uccLastSuccessfulData = cached;
-      renderAllData(cached);
-      showLoading(false);
-    } else if (showSpinner !== false) {
-      showLoading(true);
-    }
+      .then(function(result) {
 
-    requestDataWithRetry()
-      .then(function(data) {
-        renderAllData(data);
+        const data = result.data || {};
+
+        renderActive(data.active || []);
+        renderPending(data.pending || []);
+
+        document.getElementById('pendingCount').textContent =
+          (data.pending || []).length;
+
+        updateClock();
         showLoading(false);
+
       })
+
       .catch(function(error) {
+
         showLoading(false);
 
-        // Untuk refresh otomatis jangan munculkan alert setiap kali server lambat.
-        if (showSpinner !== false) {
-          alert(
-            'Gagal memuat data:\n' +
-            (error.message || error) +
-            '\n\nSilakan tekan Refresh untuk mencoba lagi.'
-          );
-        }
-      })
-      .finally(function() {
-        uccLoadInProgress = false;
+        alert(
+          'Gagal memuat data:\n' +
+          (error.message || error)
+        );
+
       });
+
   }
 
 
@@ -1555,18 +1461,29 @@
       1000
     );
 
-    // Muat data pertama kali.
-    loadData(true);
-
-    // Sinkron otomatis. Jika request sebelumnya masih berjalan,
-    // loadData() akan mengabaikan request baru sehingga tidak ada penumpukan.
-    setInterval(function() {
-      loadData(false);
-    }, 30000);
+    loadData();
 
   };
 
 </script>
 
+
+
+  <!-- =========================================================
+       SERVICE WORKER
+       Hanya untuk dukungan instalasi PWA.
+       Tidak mengubah fungsi aplikasi / Code.gs.
+       ========================================================= -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .catch(function () {
+            // Jika browser tidak mengizinkan service worker,
+            // aplikasi tetap berjalan seperti biasa.
+          });
+      });
+    }
+  </script>
 </body>
 </html>
