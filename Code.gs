@@ -1,8 +1,19 @@
 /*
  * USER CONTROL CENTER - MANAGEMENT USER
- * Koneksi DATABASE_USER dari 2 aplikasi
+ * OPTIMIZED VERSION
+ *
+ * Koneksi DATABASE_USER dari 2 aplikasi:
  * APP 1 = Ekspedisi Material
  * APP 2 = Monitoring Material
+ *
+ * OPTIMASI:
+ * 1. getControlCenterData() TIDAK lagi melakukan sinkronisasi 2 spreadsheet.
+ * 2. Sinkronisasi tetap berjalan melalui trigger setiap 1 menit.
+ * 3. Approve/Reject tidak lagi melakukan sinkronisasi penuh; hanya update
+ *    STATUS pada DATABASE_USER_CONTROL untuk user yang bersangkutan.
+ * 4. Sinkronisasi tidak lagi melakukan autoResizeColumns setiap menit.
+ * 5. Data DATABASE_USER_CONTROL hanya ditulis ulang jika memang berubah.
+ * 6. LockService mencegah sinkronisasi bertabrakan.
  */
 
 const CONFIG = {
@@ -18,48 +29,114 @@ const CONFIG = {
   TARGET_SHEET: 'DATABASE_USER_CONTROL'
 };
 
+const USER_HEADER = [
+  'APLIKASI',
+  'ID DEVICE',
+  'NAMA',
+  'STATUS',
+  'TANGGAL DAFTAR',
+  'LAST ONLINE',
+  'PERANGKAT'
+];
+
+/**
+ * Sinkronisasi 2 DATABASE_USER -> DATABASE_USER_CONTROL.
+ * Fungsi ini dipakai oleh trigger dan bisa dijalankan manual jika diperlukan.
+ */
 function sinkronDatabaseUser() {
-  const ssControl = SpreadsheetApp.getActiveSpreadsheet();
-  const targetSheet = ssControl.getSheetByName(CONFIG.TARGET_SHEET);
+  const lock = LockService.getScriptLock();
 
-  if (!targetSheet) {
-    throw new Error('Sheet ' + CONFIG.TARGET_SHEET + ' tidak ditemukan.');
+  // Jangan biarkan dua sinkronisasi berjalan bersamaan.
+  if (!lock.tryLock(5000)) {
+    console.log('Sinkronisasi dilewati karena proses lain masih berjalan.');
+    return;
   }
 
-  const dataApp1 = bacaDatabaseUser(CONFIG.APP1.ID, CONFIG.APP1.NAME);
-  const dataApp2 = bacaDatabaseUser(CONFIG.APP2.ID, CONFIG.APP2.NAME);
-  const semuaData = dataApp1.concat(dataApp2);
+  try {
+    const ssControl = SpreadsheetApp.getActiveSpreadsheet();
+    const targetSheet = ssControl.getSheetByName(CONFIG.TARGET_SHEET);
 
-  const header = [
-    'APLIKASI',
-    'ID DEVICE',
-    'NAMA',
-    'STATUS',
-    'TANGGAL DAFTAR',
-    'LAST ONLINE',
-    'PERANGKAT'
-  ];
+    if (!targetSheet) {
+      throw new Error('Sheet ' + CONFIG.TARGET_SHEET + ' tidak ditemukan.');
+    }
 
-  const maxRows = targetSheet.getMaxRows();
-  const maxCols = targetSheet.getMaxColumns();
-  if (maxRows > 1) {
-    targetSheet.getRange(2, 1, maxRows - 1, Math.min(maxCols, 7)).clearContent();
+    const dataApp1 = bacaDatabaseUser(CONFIG.APP1.ID, CONFIG.APP1.NAME);
+    const dataApp2 = bacaDatabaseUser(CONFIG.APP2.ID, CONFIG.APP2.NAME);
+    const semuaData = dataApp1.concat(dataApp2);
+
+    // Pastikan header ada, tetapi jangan melakukan formatting/resize setiap menit.
+    pastikanHeaderTarget(targetSheet);
+
+    const oldLastRow = targetSheet.getLastRow();
+    const oldData = oldLastRow >= 2
+      ? targetSheet.getRange(2, 1, oldLastRow - 1, USER_HEADER.length).getDisplayValues()
+      : [];
+
+    const newData = semuaData.map(function(row) {
+      return row.map(function(value) {
+        return value === null || value === undefined ? '' : String(value);
+      });
+    });
+
+    if (dataSama(oldData, newData)) {
+      console.log('Tidak ada perubahan data. Sinkronisasi tulis dilewati. Total user ' + newData.length);
+      return;
+    }
+
+    // Hanya clear area data lama yang benar-benar terpakai.
+    if (oldLastRow >= 2) {
+      targetSheet
+        .getRange(2, 1, oldLastRow - 1, USER_HEADER.length)
+        .clearContent();
+    }
+
+    if (newData.length > 0) {
+      targetSheet
+        .getRange(2, 1, newData.length, USER_HEADER.length)
+        .setValues(newData);
+    }
+
+    console.log('Sinkronisasi selesai. Total user ' + newData.length);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function pastikanHeaderTarget(sheet) {
+  const headerRange = sheet.getRange(1, 1, 1, USER_HEADER.length);
+  const current = headerRange.getDisplayValues()[0];
+
+  let berbeda = false;
+  for (let i = 0; i < USER_HEADER.length; i++) {
+    if (String(current[i] || '').trim() !== USER_HEADER[i]) {
+      berbeda = true;
+      break;
+    }
   }
 
-  targetSheet.getRange(1, 1, 1, header.length).setValues([header]);
+  if (berbeda) {
+    headerRange.setValues([USER_HEADER]);
+    headerRange
+      .setFontWeight('bold')
+      .setBackground('#45B8C0')
+      .setFontColor('#FFFFFF');
+  }
+}
 
-  if (semuaData.length > 0) {
-    targetSheet.getRange(2, 1, semuaData.length, header.length).setValues(semuaData);
+function dataSama(a, b) {
+  if (a.length !== b.length) return false;
+  if (a.length === 0) return true;
+
+  for (let r = 0; r < a.length; r++) {
+    if (a[r].length !== b[r].length) return false;
+    for (let c = 0; c < b[r].length; c++) {
+      if (String(a[r][c] || '') !== String(b[r][c] || '')) {
+        return false;
+      }
+    }
   }
 
-  targetSheet.getRange(1, 1, 1, header.length)
-    .setFontWeight('bold')
-    .setBackground('#45B8C0')
-    .setFontColor('#FFFFFF');
-
-  targetSheet.autoResizeColumns(1, header.length);
-
-  console.log('Sinkronisasi selesai. Total user ' + semuaData.length);
+  return true;
 }
 
 function bacaDatabaseUser(spreadsheetId, namaAplikasi) {
@@ -80,7 +157,9 @@ function bacaDatabaseUser(spreadsheetId, namaAplikasi) {
   // FORMAT LAMA : A ID DEVICE | B NAMA | C STATUS | D TANGGAL DAFTAR | E LAST ONLINE | F PERANGKAT
   // FORMAT BARU : A APLIKASI | B ID DEVICE | C NAMA | D STATUS | E TANGGAL DAFTAR | F LAST ONLINE | G PERANGKAT
   const raw = sheet.getRange(1, 1, lastRow, lastCol).getDisplayValues();
-  const headers = raw[0].map(function(v) { return String(v || '').trim().toUpperCase(); });
+  const headers = raw[0].map(function(v) {
+    return String(v || '').trim().toUpperCase();
+  });
 
   const idx = function(names, fallback) {
     for (let i = 0; i < names.length; i++) {
@@ -91,12 +170,30 @@ function bacaDatabaseUser(spreadsheetId, namaAplikasi) {
   };
 
   const colAplikasi = idx(['APLIKASI', 'APPLICATION'], -1);
-  const colId = idx(['ID DEVICE', 'ID_DEVICE', 'DEVICE ID', 'DEVICE_ID'], colAplikasi === -1 ? 0 : 1);
-  const colNama = idx(['NAMA', 'NAMA USER', 'NAMA USER'], colAplikasi === -1 ? 1 : 2);
-  const colStatus = idx(['STATUS'], colAplikasi === -1 ? 2 : 3);
-  const colTanggalDaftar = idx(['TANGGAL DAFTAR', 'TANGGAL_DAFTAR', 'TANGGAL REGISTRASI'], colAplikasi === -1 ? 3 : 4);
-  const colLastOnline = idx(['LAST ONLINE', 'LAST_ONLINE'], colAplikasi === -1 ? 4 : 5);
-  const colPerangkat = idx(['PERANGKAT', 'DEVICE', 'PLATFORM'], colAplikasi === -1 ? 5 : 6);
+  const colId = idx(
+    ['ID DEVICE', 'ID_DEVICE', 'DEVICE ID', 'DEVICE_ID'],
+    colAplikasi === -1 ? 0 : 1
+  );
+  const colNama = idx(
+    ['NAMA', 'NAMA USER'],
+    colAplikasi === -1 ? 1 : 2
+  );
+  const colStatus = idx(
+    ['STATUS'],
+    colAplikasi === -1 ? 2 : 3
+  );
+  const colTanggalDaftar = idx(
+    ['TANGGAL DAFTAR', 'TANGGAL_DAFTAR', 'TANGGAL REGISTRASI'],
+    colAplikasi === -1 ? 3 : 4
+  );
+  const colLastOnline = idx(
+    ['LAST ONLINE', 'LAST_ONLINE'],
+    colAplikasi === -1 ? 4 : 5
+  );
+  const colPerangkat = idx(
+    ['PERANGKAT', 'DEVICE', 'PLATFORM'],
+    colAplikasi === -1 ? 5 : 6
+  );
 
   const hasil = [];
 
@@ -111,8 +208,6 @@ function bacaDatabaseUser(spreadsheetId, namaAplikasi) {
 
     if (!idDevice && !nama) continue;
 
-    // Jika sumber memiliki kolom APLIKASI, tetap gunakan nama aplikasi dari konfigurasi
-    // agar hasil sinkronisasi selalu konsisten dengan 2 aplikasi yang terdaftar.
     hasil.push([
       namaAplikasi,
       idDevice,
@@ -142,6 +237,11 @@ function buatTriggerSinkronUser() {
   console.log('Trigger sinkronisasi user dibuat.');
 }
 
+/**
+ * Approve/Reject.
+ * Hanya STATUS user terkait yang diubah pada sumber dan target.
+ * Tidak melakukan sinkronisasi penuh lagi.
+ */
 function ubahStatusUser(aplikasi, idDevice, statusBaru) {
   if (!aplikasi) throw new Error('APLIKASI tidak boleh kosong.');
   if (!idDevice) throw new Error('ID DEVICE tidak boleh kosong.');
@@ -176,7 +276,9 @@ function ubahStatusUser(aplikasi, idDevice, statusBaru) {
 
   const lastCol = Math.max(sheet.getLastColumn(), 7);
   const values = sheet.getRange(1, 1, lastRow, lastCol).getDisplayValues();
-  const headers = values[0].map(function(v) { return String(v || '').trim().toUpperCase(); });
+  const headers = values[0].map(function(v) {
+    return String(v || '').trim().toUpperCase();
+  });
 
   const findCol = function(names, fallback) {
     for (let i = 0; i < names.length; i++) {
@@ -186,10 +288,22 @@ function ubahStatusUser(aplikasi, idDevice, statusBaru) {
     return fallback;
   };
 
-  const hasNewFormat = headers.indexOf('ID DEVICE') !== -1 || headers.indexOf('APLIKASI') !== -1;
-  const colId = findCol(['ID DEVICE', 'ID_DEVICE', 'DEVICE ID', 'DEVICE_ID'], hasNewFormat ? 1 : 0);
-  const colNama = findCol(['NAMA', 'NAMA USER'], hasNewFormat ? 2 : 1);
-  const colStatus = findCol(['STATUS'], hasNewFormat ? 3 : 2);
+  const hasNewFormat =
+    headers.indexOf('ID DEVICE') !== -1 ||
+    headers.indexOf('APLIKASI') !== -1;
+
+  const colId = findCol(
+    ['ID DEVICE', 'ID_DEVICE', 'DEVICE ID', 'DEVICE_ID'],
+    hasNewFormat ? 1 : 0
+  );
+  const colNama = findCol(
+    ['NAMA', 'NAMA USER'],
+    hasNewFormat ? 2 : 1
+  );
+  const colStatus = findCol(
+    ['STATUS'],
+    hasNewFormat ? 3 : 2
+  );
 
   let ditemukan = false;
   let namaUser = '';
@@ -211,11 +325,12 @@ function ubahStatusUser(aplikasi, idDevice, statusBaru) {
     );
   }
 
-  // Update HANYA kolom STATUS.
-  // TANGGAL DAFTAR dan LAST ONLINE tidak disentuh agar nilainya tetap terjaga.
+  // Update HANYA kolom STATUS pada database sumber.
   sheet.getRange(nomorBaris, colStatus + 1).setValue(statusBaru);
   SpreadsheetApp.flush();
-  sinkronDatabaseUser();
+
+  // Update target tanpa membaca ulang 2 database.
+  updateStatusTarget(aplikasi, idDevice, statusBaru);
 
   return {
     success: true,
@@ -224,6 +339,42 @@ function ubahStatusUser(aplikasi, idDevice, statusBaru) {
     nama: namaUser,
     status: statusBaru
   };
+}
+
+function updateStatusTarget(aplikasi, idDevice, statusBaru) {
+  const ssControl = SpreadsheetApp.getActiveSpreadsheet();
+  const targetSheet = ssControl.getSheetByName(CONFIG.TARGET_SHEET);
+
+  if (!targetSheet) {
+    throw new Error('Sheet ' + CONFIG.TARGET_SHEET + ' tidak ditemukan.');
+  }
+
+  const lastRow = targetSheet.getLastRow();
+  if (lastRow < 2) {
+    // Target belum terisi; lakukan sinkronisasi hanya sebagai fallback.
+    sinkronDatabaseUser();
+    return;
+  }
+
+  const data = targetSheet
+    .getRange(2, 1, lastRow - 1, USER_HEADER.length)
+    .getDisplayValues();
+
+  const appKey = String(aplikasi).trim().toUpperCase();
+  const idKey = String(idDevice).trim();
+
+  for (let i = 0; i < data.length; i++) {
+    const rowApp = String(data[i][0] || '').trim().toUpperCase();
+    const rowId = String(data[i][1] || '').trim();
+
+    if (rowApp === appKey && rowId === idKey) {
+      targetSheet.getRange(i + 2, 4).setValue(statusBaru);
+      return;
+    }
+  }
+
+  // Jika baris tidak ditemukan, fallback sinkronisasi penuh sekali.
+  sinkronDatabaseUser();
 }
 
 function approveUser(aplikasi, idDevice) {
@@ -307,10 +458,12 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/**
+ * CEPAT:
+ * Hanya membaca DATABASE_USER_CONTROL.
+ * Tidak lagi menunggu sinkronisasi 2 spreadsheet.
+ */
 function getControlCenterData() {
-  // Sinkronkan sumber terlebih dahulu supaya STATUS/LAST ONLINE terbaru terbaca.
-  sinkronDatabaseUser();
-
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(CONFIG.TARGET_SHEET);
   if (!sheet) throw new Error('Sheet DATABASE_USER_CONTROL tidak ditemukan.');
@@ -364,15 +517,6 @@ function getControlCenterData() {
   return { active: active, pending: pending };
 }
 
-/*
- * PERBAIKAN ONLINE:
- * Menerima Date asli Google Sheets dan string seperti:
- *   Sabtu, 03 Oktober 2026 — 19:13:36
- *   Sabtu, 03 Oktober 2026 19:13:36
- *   03 Oktober 2026 19:13:36
- *   03/10/2026 19:13:36
- *   2026-10-03T19:13:36
- */
 function hitungOnline(lastOnline) {
   if (lastOnline === null || lastOnline === undefined || String(lastOnline).trim() === '') {
     return { online: false, durasi: '-' };
@@ -386,11 +530,9 @@ function hitungOnline(lastOnline) {
   const sekarang = new Date();
   let selisih = Math.floor((sekarang.getTime() - date.getTime()) / 1000);
 
-  // Toleransi kecil untuk perbedaan waktu/penulisan timestamp.
   // User dianggap online jika LAST ONLINE <= 3 menit.
   const online = selisih >= 0 && selisih <= 180;
 
-  // Jika timestamp sedikit di masa depan karena perbedaan clock, tetap tampil online.
   if (selisih < 0 && selisih >= -30) {
     selisih = 0;
   }
@@ -419,13 +561,11 @@ function parseTanggalIndonesia(value) {
   const textOriginal = String(value).trim();
   if (!textOriginal) return null;
 
-  // Coba format Date/ISO terlebih dahulu.
   const isoTry = new Date(textOriginal);
   if (!isNaN(isoTry.getTime()) && /\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(textOriginal)) {
     return isoTry;
   }
 
-  // Buang nama hari dan normalisasi dash/whitespace.
   let text = textOriginal
     .replace(/^[^,]+,\s*/i, '')
     .replace(/[—–-]/g, ' ')
@@ -447,7 +587,6 @@ function parseTanggalIndonesia(value) {
     desember: 11
   };
 
-  // dd/mm/yyyy [hh:mm[:ss]]
   let match = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
   if (match) {
     const hari = Number(match[1]);
@@ -460,7 +599,6 @@ function parseTanggalIndonesia(value) {
     return isValidDateParts(result, tahun, bulanIndex, hari, jam, menit, detik) ? result : null;
   }
 
-  // dd NamaBulan yyyy [hh:mm[:ss]]
   match = text.match(/^([0-9]{1,2})\s+([A-Za-z]+)\s+([0-9]{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
   if (match) {
     const hari = Number(match[1]);
