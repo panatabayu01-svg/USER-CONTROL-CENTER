@@ -839,6 +839,116 @@
         border: 1px solid rgba(0, 194, 255, .45);
         box-shadow: 0 12px 40px rgba(0,0,0,.45);
       }
+
+      /* =========================================================
+         PC FINAL — PERBESAR KOTAK & HILANGKAN SCROLL HORIZONTAL
+         HANYA PC (>800px). MOBILE TIDAK DISENTUH.
+         Semua isi tetap berada di kolom masing-masing.
+         ========================================================= */
+      .container {
+        max-width: 1800px;
+        width: 100%;
+      }
+
+      .section {
+        width: 100%;
+      }
+
+      .table-wrap {
+        width: 100%;
+        overflow-x: hidden !important;
+      }
+
+      table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+      }
+
+      th,
+      td {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      /* ACTIVE — 6 kolom */
+      .section:first-of-type table th:nth-child(1),
+      .section:first-of-type table td:nth-child(1) { width: 5%; }
+
+      .section:first-of-type table th:nth-child(2),
+      .section:first-of-type table td:nth-child(2) { width: 23%; }
+
+      .section:first-of-type table th:nth-child(3),
+      .section:first-of-type table td:nth-child(3) { width: 13%; }
+
+      .section:first-of-type table th:nth-child(4),
+      .section:first-of-type table td:nth-child(4) { width: 9%; }
+
+      .section:first-of-type table th:nth-child(5),
+      .section:first-of-type table td:nth-child(5) { width: 35%; }
+
+      .section:first-of-type table th:nth-child(6),
+      .section:first-of-type table td:nth-child(6) { width: 15%; }
+
+      /* PENDING — 7 kolom */
+      .section:nth-of-type(2) table th:nth-child(1),
+      .section:nth-of-type(2) table td:nth-child(1) { width: 5%; }
+
+      .section:nth-of-type(2) table th:nth-child(2),
+      .section:nth-of-type(2) table td:nth-child(2) { width: 20%; }
+
+      .section:nth-of-type(2) table th:nth-child(3),
+      .section:nth-of-type(2) table td:nth-child(3) { width: 12%; }
+
+      .section:nth-of-type(2) table th:nth-child(4),
+      .section:nth-of-type(2) table td:nth-child(4) { width: 9%; }
+
+      .section:nth-of-type(2) table th:nth-child(5),
+      .section:nth-of-type(2) table td:nth-child(5) { width: 18%; }
+
+      .section:nth-of-type(2) table th:nth-child(6),
+      .section:nth-of-type(2) table td:nth-child(6) { width: 14%; }
+
+      .section:nth-of-type(2) table th:nth-child(7),
+      .section:nth-of-type(2) table td:nth-child(7) { width: 22%; }
+
+      .app-badge {
+        width: 100%;
+        min-width: 0 !important;
+        max-width: 100%;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        justify-content: center;
+      }
+
+      .status-pending {
+        max-width: 100%;
+        white-space: normal !important;
+        justify-content: center;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .approve-btn,
+      .reject-btn {
+        min-width: 0 !important;
+        width: 48%;
+        max-width: 100%;
+        padding-left: 6px;
+        padding-right: 6px;
+        white-space: normal;
+      }
+
+      .online-cell,
+      .duration-cell {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        justify-content: center;
+      }
     }
 
     /* ================================
