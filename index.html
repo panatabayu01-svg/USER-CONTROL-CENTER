@@ -1239,7 +1239,69 @@
         text-shadow: 0 1px 3px rgba(0,0,0,.65);
       }
 
-    }</style>
+    }
+/* ==========================================
+   APPROVAL NOTIFICATION — HP + PC
+   Tambahan saja, tidak mengubah layout utama
+   ========================================== */
+#approvalNotify {
+  position: fixed;
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%) translateY(-18px);
+  z-index: 99999;
+  width: min(420px, calc(100vw - 28px));
+  box-sizing: border-box;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #062744, #0a4770);
+  border: 1px solid #00d9ff;
+  box-shadow: 0 12px 35px rgba(0,0,0,.45), 0 0 20px rgba(0,217,255,.20);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+  font-family: inherit;
+}
+#approvalNotify.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+#approvalNotify .approval-title {
+  font-weight: 800;
+  font-size: 15px;
+  color: #00eaff;
+  margin-bottom: 5px;
+}
+#approvalNotify .approval-detail {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #eaf8ff;
+}
+#approvalNotify .approval-detail b { color: #fff; }
+#approvalNotify .approval-close {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  border: 0;
+  background: transparent;
+  color: #bfefff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+@media (max-width: 600px) {
+  #approvalNotify {
+    top: 14px;
+    width: calc(100vw - 24px);
+    padding: 12px 16px;
+    border-radius: 13px;
+  }
+  #approvalNotify .approval-title { font-size: 14px; }
+  #approvalNotify .approval-detail { font-size: 12px; }
+}
+
+</style>
 </head>
 
 
@@ -1625,6 +1687,7 @@
 
         renderActive(data.active || []);
         renderPending(data.pending || []);
+        setApprovalPendingBaseline(data.pending || []);
 
         document.getElementById('pendingCount').textContent =
           (data.pending || []).length;
@@ -2031,6 +2094,141 @@
   }
 
 
+
+  // ==========================================
+  // NOTIFIKASI USER BARU MENUNGGU APPROVAL
+  // Popup + suara pendek.
+  // Tidak muncul pada pemuatan pertama jika
+  // data pending memang sudah ada.
+  // ==========================================
+
+  let approvalPendingBaseline = null;
+  let approvalNotifyTimer = null;
+  let approvalAudioContext = null;
+
+  function pendingUserKey(user) {
+    return [
+      String(user && user.aplikasi || ''),
+      String(user && user.idDevice || ''),
+      String(user && user.nama || '')
+    ].join('||');
+  }
+
+  function setApprovalPendingBaseline(list) {
+    approvalPendingBaseline = new Set(
+      (list || []).map(pendingUserKey)
+    );
+  }
+
+  function unlockApprovalSound() {
+    try {
+      if (!approvalAudioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        approvalAudioContext = new AudioCtx();
+      }
+      if (approvalAudioContext.state === 'suspended') {
+        approvalAudioContext.resume();
+      }
+    } catch (e) {}
+  }
+
+  function playApprovalSound() {
+    try {
+      unlockApprovalSound();
+      if (!approvalAudioContext) return;
+
+      const ctx = approvalAudioContext;
+      if (ctx.state === 'suspended') return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.setValueAtTime(1174, now + 0.10);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.34);
+    } catch (e) {}
+  }
+
+  function showApprovalNotification(newUsers) {
+    if (!newUsers || !newUsers.length) return;
+
+    let box = document.getElementById('approvalNotify');
+
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'approvalNotify';
+      box.innerHTML = `
+        <button class="approval-close" type="button"
+                aria-label="Tutup">×</button>
+        <div class="approval-title">🔔 USER BARU MENUNGGU APPROVAL</div>
+        <div class="approval-detail"></div>
+      `;
+      document.body.appendChild(box);
+
+      box.querySelector('.approval-close').addEventListener('click', function () {
+        box.classList.remove('show');
+      });
+    }
+
+    const first = newUsers[0] || {};
+    const extra = newUsers.length > 1
+      ? ` + ${newUsers.length - 1} user lainnya`
+      : '';
+
+    const app = escapeHtml(first.aplikasi || '-');
+    const name = escapeHtml(first.nama || '-');
+
+    box.querySelector('.approval-detail').innerHTML =
+      `<b>${name}</b> — ${app}${extra}`;
+
+    box.classList.add('show');
+
+    clearTimeout(approvalNotifyTimer);
+    approvalNotifyTimer = setTimeout(function () {
+      box.classList.remove('show');
+    }, 7000);
+
+    playApprovalSound();
+  }
+
+  function checkNewApprovalUsers(list) {
+    const current = list || [];
+
+    // Pemuatan pertama: hanya simpan baseline.
+    if (approvalPendingBaseline === null) {
+      setApprovalPendingBaseline(current);
+      return;
+    }
+
+    const newUsers = current.filter(function (user) {
+      return !approvalPendingBaseline.has(pendingUserKey(user));
+    });
+
+    setApprovalPendingBaseline(current);
+
+    if (newUsers.length) {
+      showApprovalNotification(newUsers);
+    }
+  }
+
+  // Browser biasanya mengizinkan suara setelah ada interaksi
+  // pertama dari Owner. Popup tetap akan muncul jika suara
+  // diblokir oleh kebijakan browser.
+  document.addEventListener('pointerdown', unlockApprovalSound, { once: true });
+  document.addEventListener('touchstart', unlockApprovalSound, { once: true });
+
+
   // ==========================================
   // AUTO REFRESH
   // PC + HP
@@ -2055,6 +2253,7 @@
 
         renderActive(data.active || []);
         renderPending(data.pending || []);
+        checkNewApprovalUsers(data.pending || []);
 
         const pendingCount =
           document.getElementById('pendingCount');
