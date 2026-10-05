@@ -10,8 +10,10 @@
 
   <!-- =========================================================
        PWA / APP ICON
-       Tampilan dan fungsi aplikasi TIDAK diubah.
-       Bagian ini hanya untuk icon + instalasi HP/PC.
+       FIX HP / iPhone:
+       - gunakan URL GitHub Pages absolut agar iOS tidak gagal membaca icon
+       - cache-busting version agar icon lama tidak tersangkut cache
+       - tidak mengubah fungsi aplikasi / API / tampilan desktop
        ========================================================= -->
 
   <meta name="theme-color" content="#0754a6">
@@ -23,20 +25,28 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="User Control Center">
 
-  <!-- Logo saat Add to Home Screen iPhone -->
+  <!-- ICON iPHONE / iOS HOME SCREEN -->
   <link rel="apple-touch-icon"
         sizes="180x180"
-        href="./assets/USER_CONTROL_CENTER_IPHONE_180x180.png?v=2">
+        href="https://panatabayu01-svg.github.io/USER-CONTROL-CENTER/assets/USER_CONTROL_CENTER_IPHONE_180x180.png?v=20261005">
 
-  <!-- Logo browser / Android -->
+  <link rel="apple-touch-icon-precomposed"
+        sizes="180x180"
+        href="https://panatabayu01-svg.github.io/USER-CONTROL-CENTER/assets/USER_CONTROL_CENTER_IPHONE_180x180.png?v=20261005">
+
+  <!-- ICON BROWSER / ANDROID -->
   <link rel="icon"
         type="image/png"
         sizes="192x192"
-        href="./assets/USER_CONTROL_CENTER_ANDROID_192x192.png?v=2">
+        href="https://panatabayu01-svg.github.io/USER-CONTROL-CENTER/assets/USER_CONTROL_CENTER_ANDROID_192x192.png?v=20261005">
 
-  <!-- PWA manifest -->
+  <link rel="shortcut icon"
+        type="image/png"
+        href="https://panatabayu01-svg.github.io/USER-CONTROL-CENTER/assets/USER_CONTROL_CENTER_ANDROID_192x192.png?v=20261005">
+
+  <!-- PWA MANIFEST -->
   <link rel="manifest"
-        href="./manifest.webmanifest?v=2">
+        href="https://panatabayu01-svg.github.io/USER-CONTROL-CENTER/manifest.webmanifest?v=20261005">
 
   <title>User Control Center</title>
 
