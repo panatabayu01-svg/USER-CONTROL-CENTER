@@ -930,9 +930,13 @@
   // LOAD DATA
   // ==========================================
 
-  function loadData() {
+  function loadData(showSpinner) {
 
-    showLoading(true);
+    // Loading overlay hanya ditampilkan saat pembukaan awal / refresh manual.
+    // Refresh otomatis berjalan diam-diam agar tampilan tidak berkedip.
+    if (showSpinner !== false) {
+      showLoading(true);
+    }
 
     apiCall('getData')
 
@@ -1429,7 +1433,15 @@
       1000
     );
 
-    loadData();
+    // Muat data pertama kali.
+    loadData(true);
+
+    // Sinkron tampilan GitHub secara otomatis tanpa perlu Refresh browser.
+    // Database sumber tetap mengikuti trigger Apps Script; polling ini hanya
+    // mengambil data terbaru dari API secara berkala.
+    setInterval(function() {
+      loadData(false);
+    }, 10000);
 
   };
 
