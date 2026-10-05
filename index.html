@@ -1687,7 +1687,11 @@
 
         renderActive(data.active || []);
         renderPending(data.pending || []);
-        setApprovalPendingBaseline(data.pending || []);
+
+        // Penting: jangan reset baseline setiap refresh.
+        // Jika ada user baru masuk setelah aplikasi terbuka,
+        // perubahan harus dianggap sebagai user baru dan memicu notifikasi.
+        checkNewApprovalUsers(data.pending || []);
 
         document.getElementById('pendingCount').textContent =
           (data.pending || []).length;
@@ -2194,6 +2198,11 @@
 
     box.classList.add('show');
 
+    // Getaran singkat pada HP (jika browser mengizinkan).
+    try {
+      if (navigator.vibrate) navigator.vibrate([120, 70, 120]);
+    } catch (e) {}
+
     clearTimeout(approvalNotifyTimer);
     approvalNotifyTimer = setTimeout(function () {
       box.classList.remove('show');
@@ -2381,6 +2390,10 @@
 
     // Muat data langsung saat aplikasi pertama dibuka.
     loadData();
+
+    // Cek kembali segera setelah aplikasi selesai dibuka,
+    // lalu lanjut polling berkala.
+    setTimeout(autoRefreshData, 2000);
 
     // Auto refresh PC + HP setiap 10 detik.
     // Tidak menampilkan loading overlay dan tidak
