@@ -1410,17 +1410,48 @@
       }
 
     }
-  /* USER DATABASE POPUP */
-  .ucc-user-modal{display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+  /* USER DATABASE POPUP — RESPONSIVE / PC + HP */
+  .ucc-user-modal{display:none;position:fixed;inset:0;z-index:99999;background:rgba(1,10,20,.78);align-items:center;justify-content:center;padding:18px;box-sizing:border-box;backdrop-filter:blur(3px)}
   .ucc-user-modal.show{display:flex}
-  .ucc-user-modal-box{width:min(980px,96vw);max-height:88vh;overflow:auto;background:#06233d;border:1px solid #1594d1;border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.5);color:#fff}
-  .ucc-user-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:#0a3963;border-bottom:1px solid #155a86;position:sticky;top:0;z-index:2}
-  .ucc-user-modal-title{font-size:20px;font-weight:800}.ucc-user-modal-close{border:0;background:transparent;color:#fff;font-size:28px;line-height:1;cursor:pointer}
-  .ucc-user-modal-body{padding:16px 20px 20px}.ucc-user-modal-table{width:100%;border-collapse:collapse}
-  .ucc-user-modal-table th,.ucc-user-modal-table td{border:1px solid #155a86;padding:9px 8px;text-align:center;vertical-align:middle}.ucc-user-modal-table th{background:#0b3b66;font-weight:800}.ucc-user-modal-table td{background:#062b48}
-  .ucc-user-edit-btn,.ucc-user-delete-btn,.ucc-user-save-btn,.ucc-user-cancel-btn{border:0;border-radius:8px;padding:7px 11px;font-weight:800;cursor:pointer;margin:2px}.ucc-user-edit-btn{background:#1687d4;color:#fff}.ucc-user-delete-btn{background:#c83b45;color:#fff}.ucc-user-save-btn{background:#159b72;color:#fff}.ucc-user-cancel-btn{background:#596b78;color:#fff}
-  .ucc-user-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}.ucc-user-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700}.ucc-user-form input,.ucc-user-form select{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:8px;border:1px solid #3e718f;background:#031a2d;color:#fff}.ucc-user-form input[readonly]{opacity:.72}.ucc-user-form-actions{grid-column:1/-1;text-align:right}.ucc-user-empty,.ucc-user-loading{padding:28px 10px;text-align:center;opacity:.85}
-  @media(max-width:700px){.ucc-user-modal{padding:10px}.ucc-user-modal-box{width:96vw;max-height:92vh;border-radius:14px}.ucc-user-modal-head{padding:13px 14px}.ucc-user-modal-title{font-size:17px}.ucc-user-modal-body{padding:10px;overflow-x:auto}.ucc-user-modal-table{min-width:760px}.ucc-user-form{grid-template-columns:1fr}.ucc-user-form-actions{grid-column:auto;text-align:center}}
+  .ucc-user-modal-box{width:min(1080px,96vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#062b49 0%,#041f35 100%);border:1px solid rgba(21,166,225,.8);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.65);color:#fff}
+  .ucc-user-modal-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex:0 0 auto;padding:16px 20px;background:linear-gradient(135deg,#0b4678,#0a3156);border-bottom:1px solid rgba(35,170,225,.45)}
+  .ucc-user-modal-title{font-size:20px;font-weight:900;letter-spacing:.2px;line-height:1.2}.ucc-user-modal-close{width:38px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .ucc-user-modal-close:hover{background:rgba(255,255,255,.14)}
+  .ucc-user-modal-body{padding:16px 18px 20px;overflow:auto;min-height:0}
+  .ucc-user-modal-table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid #155a86;border-radius:14px}
+  .ucc-user-modal-table th,.ucc-user-modal-table td{border-right:1px solid #155a86;border-bottom:1px solid #155a86;padding:10px 8px;text-align:center;vertical-align:middle;line-height:1.25}
+  .ucc-user-modal-table th:last-child,.ucc-user-modal-table td:last-child{border-right:0}
+  .ucc-user-modal-table tbody tr:last-child td{border-bottom:0}
+  .ucc-user-modal-table th{background:#0b3b66;font-weight:900;font-size:13px}.ucc-user-modal-table td{background:#062b48;font-size:13px}.ucc-user-modal-table tbody tr:hover td{background:#083655}
+  .ucc-user-edit-btn,.ucc-user-delete-btn,.ucc-user-save-btn,.ucc-user-cancel-btn{border:0;border-radius:9px;padding:7px 11px;font-weight:800;cursor:pointer;margin:2px;transition:.15s}
+  .ucc-user-edit-btn{background:#1687d4;color:#fff}.ucc-user-delete-btn{background:#c83b45;color:#fff}.ucc-user-save-btn{background:#159b72;color:#fff}.ucc-user-cancel-btn{background:#596b78;color:#fff}
+  .ucc-user-edit-btn:hover,.ucc-user-delete-btn:hover,.ucc-user-save-btn:hover,.ucc-user-cancel-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+  .ucc-user-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.ucc-user-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800}.ucc-user-form input,.ucc-user-form select{width:100%;box-sizing:border-box;padding:10px 11px;border-radius:9px;border:1px solid #3e718f;background:#031a2d;color:#fff}.ucc-user-form input[readonly]{opacity:.72}.ucc-user-form-actions{grid-column:1/-1;text-align:right;padding-top:4px}.ucc-user-empty,.ucc-user-loading{padding:32px 10px;text-align:center;opacity:.9}
+  .ucc-user-mobile-list{display:none}
+  .ucc-user-mobile-card{background:#062b48;border:1px solid #155a86;border-radius:14px;margin-bottom:10px;overflow:hidden}
+  .ucc-user-mobile-card:last-child{margin-bottom:0}
+  .ucc-user-mobile-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;background:#0b3b66;border-bottom:1px solid #155a86}
+  .ucc-user-mobile-no{font-weight:900;font-size:14px}.ucc-user-mobile-name{font-weight:900;color:#51f0c0}
+  .ucc-user-mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .ucc-user-mobile-field{padding:10px 12px;border-bottom:1px solid rgba(21,90,134,.75)}
+  .ucc-user-mobile-field:nth-child(odd){border-right:1px solid rgba(21,90,134,.75)}
+  .ucc-user-mobile-label{display:block;font-size:10px;font-weight:800;color:#8eb6d0;text-transform:uppercase;margin-bottom:4px}
+  .ucc-user-mobile-value{font-size:12px;font-weight:700;word-break:break-word;line-height:1.3}
+  .ucc-user-mobile-actions{display:flex;gap:8px;padding:10px 12px;background:#05243d}
+  .ucc-user-mobile-actions button{flex:1;margin:0}
+  @media(max-width:700px){
+    .ucc-user-modal{padding:8px;align-items:center}
+    .ucc-user-modal-box{width:100%;max-width:520px;height:min(92vh,760px);max-height:92vh;border-radius:16px}
+    .ucc-user-modal-head{padding:12px 13px}
+    .ucc-user-modal-title{font-size:16px;max-width:calc(100% - 48px)}
+    .ucc-user-modal-close{width:34px;height:34px;font-size:24px}
+    .ucc-user-modal-body{padding:10px;overflow:auto}
+    .ucc-user-modal-table{display:none}
+    .ucc-user-mobile-list{display:block}
+    .ucc-user-form{grid-template-columns:1fr;gap:10px}
+    .ucc-user-form-actions{grid-column:auto;text-align:center;display:flex;gap:8px}
+    .ucc-user-form-actions button{flex:1}
+  }
 
 </style>
 </head>
@@ -2380,9 +2411,37 @@
   function renderManagedUsers(){
     const content=document.getElementById('uccUserModalContent');if(!content)return;
     if(!uccManagedUsers.length){content.innerHTML='<div class="ucc-user-empty">Tidak ada data user pada DATABASE_USER.</div>';return;}
-    let html='<div style="overflow-x:auto"><table class="ucc-user-modal-table"><thead><tr><th>No</th><th>ID DEVICE</th><th>NAMA</th><th>STATUS</th><th>TANGGAL DAFTAR</th><th>LAST ONLINE</th><th>PERANGKAT</th><th>AKSI</th></tr></thead><tbody>';
-    uccManagedUsers.forEach(function(user,index){html+='<tr><td>'+(index+1)+'</td><td>'+escapeHtml(user.idDevice||'-')+'</td><td><strong>'+escapeHtml(user.nama||'-')+'</strong></td><td>'+escapeHtml(user.status||'-')+'</td><td>'+escapeHtml(user.tanggalDaftar||'-')+'</td><td>'+escapeHtml(user.lastOnline||'-')+'</td><td>'+escapeHtml(user.perangkat||'-')+'</td><td style="white-space:nowrap"><button class="ucc-user-edit-btn" onclick="editManagedUser('+index+')">✏ Edit</button><button class="ucc-user-delete-btn" onclick="deleteManagedUser('+index+')">🗑 Hapus</button></td></tr>';});
-    content.innerHTML=html+'</tbody></table></div>';
+
+    let desktop='<table class="ucc-user-modal-table"><thead><tr><th>No</th><th>ID DEVICE</th><th>NAMA</th><th>STATUS</th><th>TANGGAL DAFTAR</th><th>LAST ONLINE</th><th>PERANGKAT</th><th>AKSI</th></tr></thead><tbody>';
+    let mobile='<div class="ucc-user-mobile-list">';
+
+    uccManagedUsers.forEach(function(user,index){
+      const no=index+1;
+      const id=escapeHtml(user.idDevice||'-');
+      const nama=escapeHtml(user.nama||'-');
+      const status=escapeHtml(user.status||'-');
+      const daftar=escapeHtml(user.tanggalDaftar||'-');
+      const online=escapeHtml(user.lastOnline||'-');
+      const perangkat=escapeHtml(user.perangkat||'-');
+
+      desktop+='<tr><td>'+no+'</td><td>'+id+'</td><td><strong>'+nama+'</strong></td><td>'+status+'</td><td>'+daftar+'</td><td>'+online+'</td><td>'+perangkat+'</td><td style="white-space:nowrap"><button class="ucc-user-edit-btn" onclick="editManagedUser('+index+')">✏ Edit</button><button class="ucc-user-delete-btn" onclick="deleteManagedUser('+index+')">🗑 Hapus</button></td></tr>';
+
+      mobile+='<div class="ucc-user-mobile-card">'+
+        '<div class="ucc-user-mobile-card-head"><span class="ucc-user-mobile-no">USER #'+no+'</span><span class="ucc-user-mobile-name">'+nama+'</span></div>'+
+        '<div class="ucc-user-mobile-grid">'+
+          '<div class="ucc-user-mobile-field"><span class="ucc-user-mobile-label">ID DEVICE</span><span class="ucc-user-mobile-value">'+id+'</span></div>'+
+          '<div class="ucc-user-mobile-field"><span class="ucc-user-mobile-label">STATUS</span><span class="ucc-user-mobile-value">'+status+'</span></div>'+
+          '<div class="ucc-user-mobile-field"><span class="ucc-user-mobile-label">TANGGAL DAFTAR</span><span class="ucc-user-mobile-value">'+daftar+'</span></div>'+
+          '<div class="ucc-user-mobile-field"><span class="ucc-user-mobile-label">LAST ONLINE</span><span class="ucc-user-mobile-value">'+online+'</span></div>'+
+          '<div class="ucc-user-mobile-field"><span class="ucc-user-mobile-label">PERANGKAT</span><span class="ucc-user-mobile-value">'+perangkat+'</span></div>'+
+        '</div>'+
+        '<div class="ucc-user-mobile-actions"><button class="ucc-user-edit-btn" onclick="editManagedUser('+index+')">✏ Edit</button><button class="ucc-user-delete-btn" onclick="deleteManagedUser('+index+')">🗑 Hapus</button></div>'+
+      '</div>';
+    });
+
+    desktop+='</tbody></table>';
+    mobile+='</div>';
+    content.innerHTML=desktop+mobile;
   }
   function editManagedUser(index){
     const user=uccManagedUsers[index];if(!user)return;const content=document.getElementById('uccUserModalContent');if(!content)return;
