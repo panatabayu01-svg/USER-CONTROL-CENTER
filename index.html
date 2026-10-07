@@ -1409,7 +1409,20 @@
         text-shadow: 0 1px 3px rgba(0,0,0,.65);
       }
 
-    }</style>
+    }
+  /* USER DATABASE POPUP */
+  .ucc-user-modal{display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+  .ucc-user-modal.show{display:flex}
+  .ucc-user-modal-box{width:min(980px,96vw);max-height:88vh;overflow:auto;background:#06233d;border:1px solid #1594d1;border-radius:18px;box-shadow:0 18px 55px rgba(0,0,0,.5);color:#fff}
+  .ucc-user-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:#0a3963;border-bottom:1px solid #155a86;position:sticky;top:0;z-index:2}
+  .ucc-user-modal-title{font-size:20px;font-weight:800}.ucc-user-modal-close{border:0;background:transparent;color:#fff;font-size:28px;line-height:1;cursor:pointer}
+  .ucc-user-modal-body{padding:16px 20px 20px}.ucc-user-modal-table{width:100%;border-collapse:collapse}
+  .ucc-user-modal-table th,.ucc-user-modal-table td{border:1px solid #155a86;padding:9px 8px;text-align:center;vertical-align:middle}.ucc-user-modal-table th{background:#0b3b66;font-weight:800}.ucc-user-modal-table td{background:#062b48}
+  .ucc-user-edit-btn,.ucc-user-delete-btn,.ucc-user-save-btn,.ucc-user-cancel-btn{border:0;border-radius:8px;padding:7px 11px;font-weight:800;cursor:pointer;margin:2px}.ucc-user-edit-btn{background:#1687d4;color:#fff}.ucc-user-delete-btn{background:#c83b45;color:#fff}.ucc-user-save-btn{background:#159b72;color:#fff}.ucc-user-cancel-btn{background:#596b78;color:#fff}
+  .ucc-user-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}.ucc-user-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700}.ucc-user-form input,.ucc-user-form select{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:8px;border:1px solid #3e718f;background:#031a2d;color:#fff}.ucc-user-form input[readonly]{opacity:.72}.ucc-user-form-actions{grid-column:1/-1;text-align:right}.ucc-user-empty,.ucc-user-loading{padding:28px 10px;text-align:center;opacity:.85}
+  @media(max-width:700px){.ucc-user-modal{padding:10px}.ucc-user-modal-box{width:96vw;max-height:92vh;border-radius:14px}.ucc-user-modal-head{padding:13px 14px}.ucc-user-modal-title{font-size:17px}.ucc-user-modal-body{padding:10px;overflow-x:auto}.ucc-user-modal-table{min-width:760px}.ucc-user-form{grid-template-columns:1fr}.ucc-user-form-actions{grid-column:auto;text-align:center}}
+
+</style>
 </head>
 
 
@@ -1604,6 +1617,15 @@
   </div>
 
 
+
+  <!-- POPUP DATABASE USER -->
+  <div class="ucc-user-modal" id="uccUserModal" onclick="if(event.target===this)closeUserPopup()">
+    <div class="ucc-user-modal-box">
+      <div class="ucc-user-modal-head"><div class="ucc-user-modal-title" id="uccUserModalTitle">DATABASE USER</div><button class="ucc-user-modal-close" onclick="closeUserPopup()">×</button></div>
+      <div class="ucc-user-modal-body"><div id="uccUserModalContent" class="ucc-user-loading">Memuat data user...</div></div>
+    </div>
+  </div>
+
   <!-- ================================
        LOADING
        ================================ -->
@@ -1721,7 +1743,7 @@
     ) {
 
       return `
-        <span class="app-badge app-ekspedisi">
+        <span class="app-badge app-ekspedisi" role="button" tabindex="0" onclick="openUserPopup(\'EKSPEDISI MATERIAL\')">
           <span>🚚</span> Ekspedisi Material
         </span>
       `;
@@ -1729,7 +1751,7 @@
     }
 
     return `
-      <span class="app-badge app-monitoring">
+      <span class="app-badge app-monitoring" role="button" tabindex="0" onclick="openUserPopup(\'MONITORING MATERIAL\')">
         <span>📊</span> Monitoring Material
       </span>
     `;
@@ -2337,6 +2359,52 @@
 
   }
 
+
+
+  // DATABASE USER — popup, edit, hapus
+  let uccManagedApplication = '';
+  let uccManagedUsers = [];
+
+  function openUserPopup(aplikasi){
+    uccManagedApplication=String(aplikasi||'').trim();
+    const modal=document.getElementById('uccUserModal'), content=document.getElementById('uccUserModalContent');
+    if(!modal||!content)return;
+    document.getElementById('uccUserModalTitle').textContent='DATABASE USER — '+uccManagedApplication;
+    content.innerHTML='<div class="ucc-user-loading">Memuat DATABASE_USER...</div>';
+    modal.classList.add('show');
+    apiCall('getUsersByApplication',{aplikasi:uccManagedApplication}).then(function(result){
+      uccManagedUsers=(result&&result.data)||[]; renderManagedUsers();
+    }).catch(function(error){content.innerHTML='<div class="ucc-user-empty">Gagal memuat data:<br>'+escapeHtml(error.message||error)+'</div>';});
+  }
+  function closeUserPopup(){const modal=document.getElementById('uccUserModal');if(modal)modal.classList.remove('show');uccManagedApplication='';uccManagedUsers=[];}
+  function renderManagedUsers(){
+    const content=document.getElementById('uccUserModalContent');if(!content)return;
+    if(!uccManagedUsers.length){content.innerHTML='<div class="ucc-user-empty">Tidak ada data user pada DATABASE_USER.</div>';return;}
+    let html='<div style="overflow-x:auto"><table class="ucc-user-modal-table"><thead><tr><th>No</th><th>ID DEVICE</th><th>NAMA</th><th>STATUS</th><th>TANGGAL DAFTAR</th><th>LAST ONLINE</th><th>PERANGKAT</th><th>AKSI</th></tr></thead><tbody>';
+    uccManagedUsers.forEach(function(user,index){html+='<tr><td>'+(index+1)+'</td><td>'+escapeHtml(user.idDevice||'-')+'</td><td><strong>'+escapeHtml(user.nama||'-')+'</strong></td><td>'+escapeHtml(user.status||'-')+'</td><td>'+escapeHtml(user.tanggalDaftar||'-')+'</td><td>'+escapeHtml(user.lastOnline||'-')+'</td><td>'+escapeHtml(user.perangkat||'-')+'</td><td style="white-space:nowrap"><button class="ucc-user-edit-btn" onclick="editManagedUser('+index+')">✏ Edit</button><button class="ucc-user-delete-btn" onclick="deleteManagedUser('+index+')">🗑 Hapus</button></td></tr>';});
+    content.innerHTML=html+'</tbody></table></div>';
+  }
+  function editManagedUser(index){
+    const user=uccManagedUsers[index];if(!user)return;const content=document.getElementById('uccUserModalContent');if(!content)return;
+    const status=String(user.status||'').toUpperCase(), dev=String(user.perangkat||'').toUpperCase();
+    content.innerHTML='<div style="font-weight:800;font-size:16px;margin-bottom:8px">EDIT USER</div><div class="ucc-user-form">'+
+      '<label>ID DEVICE<input id="uccEditId" value="'+escapeHtml(user.idDevice||'')+'" readonly></label>'+
+      '<label>NAMA<input id="uccEditNama" value="'+escapeHtml(user.nama||'')+'"></label>'+
+      '<label>STATUS<select id="uccEditStatus"><option value="PENDING" '+(status==='PENDING'?'selected':'')+'>PENDING</option><option value="APPROVED" '+(status==='APPROVED'?'selected':'')+'>APPROVED</option><option value="REJECTED" '+(status==='REJECTED'?'selected':'')+'>REJECTED</option></select></label>'+
+      '<label>PERANGKAT<select id="uccEditPerangkat"><option value="PC" '+(dev==='PC'?'selected':'')+'>PC</option><option value="HP" '+(dev==='HP'?'selected':'')+'>HP</option></select></label>'+
+      '<label>TANGGAL DAFTAR<input value="'+escapeHtml(user.tanggalDaftar||'')+'" readonly></label>'+
+      '<label>LAST ONLINE<input value="'+escapeHtml(user.lastOnline||'')+'" readonly></label>'+
+      '<div class="ucc-user-form-actions"><button class="ucc-user-cancel-btn" onclick="renderManagedUsers()">Batal</button><button class="ucc-user-save-btn" onclick="saveManagedUser()">💾 Simpan</button></div></div>';
+  }
+  function saveManagedUser(){
+    const idDevice=document.getElementById('uccEditId').value.trim(),nama=document.getElementById('uccEditNama').value.trim(),status=document.getElementById('uccEditStatus').value,perangkat=document.getElementById('uccEditPerangkat').value;
+    if(!nama){alert('Nama user tidak boleh kosong.');return;} if(!confirm('Simpan perubahan user "'+nama+'"?'))return;
+    apiCall('updateUser',{aplikasi:uccManagedApplication,idDevice:idDevice,nama:nama,status:status,perangkat:perangkat}).then(function(){alert('✅ Data user berhasil diperbarui.');loadData();openUserPopup(uccManagedApplication);}).catch(function(error){alert('Gagal menyimpan perubahan:\n'+(error.message||error));});
+  }
+  function deleteManagedUser(index){
+    const user=uccManagedUsers[index];if(!user)return;if(!confirm('Hapus user "'+(user.nama||'')+'" dari DATABASE_USER '+uccManagedApplication+'?\n\nData akan dihapus dari aplikasi sumber.'))return;
+    apiCall('deleteUser',{aplikasi:uccManagedApplication,idDevice:user.idDevice||''}).then(function(){alert('🗑 User berhasil dihapus.');loadData();openUserPopup(uccManagedApplication);}).catch(function(error){alert('Gagal menghapus user:\n'+(error.message||error));});
+  }
 
   // ==========================================
   // START
