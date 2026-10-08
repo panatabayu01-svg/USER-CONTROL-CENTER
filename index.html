@@ -2355,6 +2355,53 @@
   // LOAD DATA
   // ==========================================
 
+  // Cache data terakhir hanya untuk mempercepat tampilan awal.
+  // Data tetap diperbarui dari server segera setelah aplikasi mulai.
+  const UCC_STARTUP_CACHE_KEY = 'ucc_startup_data_v1';
+
+  function renderAllData(data) {
+    data = data || {};
+
+    renderActive(data.active || []);
+    renderPending(data.pending || []);
+    renderPMProjects(data.pmProjects || []);
+
+    const pendingCount = document.getElementById('pendingCount');
+    if (pendingCount) {
+      pendingCount.textContent = (data.pending || []).length;
+    }
+
+    updateClock();
+  }
+
+  function saveStartupCache(data) {
+    try {
+      localStorage.setItem(
+        UCC_STARTUP_CACHE_KEY,
+        JSON.stringify({
+          savedAt: Date.now(),
+          data: data || {}
+        })
+      );
+    } catch (e) {
+      // Cache gagal disimpan tidak boleh mengganggu aplikasi.
+    }
+  }
+
+  function readStartupCache() {
+    try {
+      const raw = localStorage.getItem(UCC_STARTUP_CACHE_KEY);
+      if (!raw) return null;
+
+      const cached = JSON.parse(raw);
+      if (!cached || !cached.data) return null;
+
+      return cached.data;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function loadData() {
 
     showLoading(true);
@@ -2365,14 +2412,9 @@
 
         const data = result.data || {};
 
-        renderActive(data.active || []);
-        renderPending(data.pending || []);
-        renderPMProjects(data.pmProjects || []);
+        renderAllData(data);
+        saveStartupCache(data);
 
-        document.getElementById('pendingCount').textContent =
-          (data.pending || []).length;
-
-        updateClock();
         showLoading(false);
 
       })
@@ -2386,6 +2428,48 @@
           (error.message || error)
         );
 
+      });
+
+  }
+
+  // Startup cepat:
+  // tampilkan cache terakhir terlebih dahulu jika tersedia,
+  // lalu ambil data terbaru dari server tanpa membuat user
+  // menunggu layar loading.
+  function initialLoadData() {
+
+    const cachedData = readStartupCache();
+
+    if (cachedData) {
+      renderAllData(cachedData);
+      showLoading(false);
+    } else {
+      showLoading(true);
+    }
+
+    apiCall('getData')
+
+      .then(function(result) {
+
+        const data = result.data || {};
+
+        renderAllData(data);
+        saveStartupCache(data);
+
+        showLoading(false);
+
+      })
+
+      .catch(function(error) {
+
+        if (!cachedData) {
+          showLoading(false);
+          alert(
+            'Gagal memuat data:\n' +
+            (error.message || error)
+          );
+        }
+        // Jika cache tersedia, data cache tetap ditampilkan.
       });
 
   }
@@ -2797,19 +2881,8 @@
 
         const data = result.data || {};
 
-        renderActive(data.active || []);
-        renderPending(data.pending || []);
-        renderPMProjects(data.pmProjects || []);
-
-        const pendingCount =
-          document.getElementById('pendingCount');
-
-        if (pendingCount) {
-          pendingCount.textContent =
-            (data.pending || []).length;
-        }
-
-        updateClock();
+        renderAllData(data);
+        saveStartupCache(data);
 
       })
 
@@ -2990,7 +3063,7 @@
   // START
   // ==========================================
 
-  window.onload = function() {
+  function startUCCApp() {
 
     updateClock();
 
@@ -2999,8 +3072,10 @@
       1000
     );
 
-    // Muat data langsung saat aplikasi pertama dibuka.
-    loadData();
+    // Startup dipercepat:
+    // tampilkan cache terakhir bila ada, kemudian
+    // ambil data terbaru dari server di background.
+    initialLoadData();
 
     // Auto refresh PC + HP setiap 10 detik.
     // Tidak menampilkan loading overlay dan tidak
@@ -3010,7 +3085,16 @@
       10000
     );
 
-  };
+  }
+
+  // Jangan menunggu seluruh gambar/aset selesai dimuat.
+  // Aplikasi mulai begitu DOM siap sehingga request data
+  // dapat berjalan lebih cepat saat pertama dibuka.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startUCCApp);
+  } else {
+    startUCCApp();
+  }
 
 </script>
 
