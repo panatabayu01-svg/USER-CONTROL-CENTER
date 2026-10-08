@@ -1006,7 +1006,8 @@
          - Tgl Approved dihilangkan
          - Validasi QC menjadi dropdown Open / Approved
          - Aksi mengikuti nilai dropdown
-         - HP tetap tidak disentuh
+         - Tombol Sheet tetap membuka sheet proyek
+         - Tampilan juga tersedia di HP
          ========================================================= */
       .pm-approval-section { margin-top: 16px; }
       .pm-approval-section .section-title { background: linear-gradient(135deg, #063f2d 0%, #087a54 55%, #0a9b68 100%); }
@@ -1048,21 +1049,24 @@
         font-weight:700;
       }
 
-      .pm-action-wrap { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:nowrap; }
-      .pm-action-btn {
+      .pm-action-wrap { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:nowrap; }
+      .pm-status-btn, .pm-sheet-btn {
         border:0;
         border-radius:7px;
-        min-width:108px;
         padding:8px 12px;
         font-size:13px;
         font-weight:800;
-        cursor:pointer;
         white-space:nowrap;
         color:#fff;
+        line-height:1.1;
       }
-      .pm-action-btn.approved { background:linear-gradient(135deg,#e53935,#c62828); }
-      .pm-action-btn.open { background:linear-gradient(135deg,#00a85a,#008947); }
-      .pm-action-btn:disabled { opacity:.55; cursor:not-allowed; }
+      .pm-status-btn.approved { background:linear-gradient(135deg,#e53935,#c62828); }
+      .pm-status-btn.open { background:linear-gradient(135deg,#00a85a,#008947); }
+      .pm-sheet-btn {
+        min-width:92px;
+        background:linear-gradient(135deg,#0878d1,#0759ad);
+        cursor:pointer;
+      }
       .pm-empty { padding:28px !important; color:#69b9ff; text-align:center !important; }
 
 
@@ -1074,7 +1078,25 @@
 
     @media (max-width: 800px) {
 
-      .pm-approval-section { display:none !important; }
+      /* USER APPROVAL PM PROJECT — tampil juga di HP */
+      .pm-approval-section { display:block !important; margin-top:12px; }
+      .pm-approval-section .section-title { min-height:52px; padding:9px 10px; font-size:14px; }
+      .pm-approval-section .section-title-left > div:last-child { max-width:220px; }
+      .pm-approval-section .pm-project-count { padding:7px 9px; font-size:10px; }
+      .pm-approval-section .table-wrap { padding:6px 5px 8px; overflow-x:hidden !important; }
+      .pm-approval-section table { width:100% !important; table-layout:fixed !important; }
+      .pm-approval-section table th { padding:7px 2px; font-size:8.5px; }
+      .pm-approval-section table td { padding:6px 2px; font-size:9px; min-height:52px; }
+      .pm-approval-section table th:nth-child(1), .pm-approval-section table td:nth-child(1) { width:6%; }
+      .pm-approval-section table th:nth-child(2), .pm-approval-section table td:nth-child(2) { width:27%; }
+      .pm-approval-section table th:nth-child(3), .pm-approval-section table td:nth-child(3) { width:13%; }
+      .pm-approval-section table th:nth-child(4), .pm-approval-section table td:nth-child(4) { width:17%; }
+      .pm-approval-section table th:nth-child(5), .pm-approval-section table td:nth-child(5) { width:16%; }
+      .pm-approval-section table th:nth-child(6), .pm-approval-section table td:nth-child(6) { width:21%; }
+      .pm-qc-select { width:100%; min-width:0; padding:6px 16px 6px 4px; border-radius:14px; font-size:8.5px; }
+      .pm-action-wrap { gap:3px; }
+      .pm-status-btn, .pm-sheet-btn { min-width:0; padding:6px 3px; border-radius:6px; font-size:8px; line-height:1.05; flex:1 1 0; }
+      .pm-sheet-btn { min-width:0; }
 
       html,
       body {
@@ -2125,13 +2147,16 @@
         </td>
         <td>
           <div class="pm-action-wrap">
+            <div class="pm-status-btn ${qc === 'Approved' ? 'approved' : 'open'}">
+              ${qc === 'Approved' ? '✓ Approved' : 'Open'}
+            </div>
             <button
-              class="pm-action-btn ${qc === 'Approved' ? 'approved' : 'open'}"
+              class="pm-sheet-btn"
               type="button"
               ${linkSheet ? '' : 'disabled'}
               data-link="${safeLink}"
               onclick="openPMProject(this)">
-              ${qc === 'Approved' ? '✓ Approved' : '📁 Open'}
+              📁 Sheet
             </button>
           </div>
         </td>`;
@@ -2152,12 +2177,12 @@
     const row = select.closest('tr');
     if (!row) return;
 
-    const actionButton = row.querySelector('.pm-action-btn');
-    if (!actionButton) return;
+    const statusButton = row.querySelector('.pm-status-btn');
+    if (!statusButton) return;
 
-    actionButton.classList.toggle('approved', isApproved);
-    actionButton.classList.toggle('open', !isApproved);
-    actionButton.innerHTML = isApproved ? '✓ Approved' : '📁 Open';
+    statusButton.classList.toggle('approved', isApproved);
+    statusButton.classList.toggle('open', !isApproved);
+    statusButton.innerHTML = isApproved ? '✓ Approved' : 'Open';
   }
 
   function openPMProject(button) {
