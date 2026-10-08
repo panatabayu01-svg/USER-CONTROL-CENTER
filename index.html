@@ -2183,6 +2183,15 @@
   // USER APPROVAL PM PROJECT
   // ==========================================
 
+  // Menyimpan pilihan dropdown QC yang baru dipilih user di browser.
+  // Tujuannya agar auto-refresh 10 detik tidak menimpa pilihan
+  // sebelum fungsi backend/Code.gs kita sambungkan.
+  const pmQCOverrides = Object.create(null);
+
+  function pmQCKey(project, noPM) {
+    return String(project || '').trim() + '||' + String(noPM || '').trim();
+  }
+
   function renderPMProjects(data) {
     const body = document.getElementById('pmProjectBody');
     const countEl = document.getElementById('pmProjectCount');
@@ -2203,7 +2212,11 @@
       const noPM = pm.noPM || pm.noPm || pm.pmTerakhir || '-';
       const tglPM = pm.tglPM || pm.tanggalPM || '-';
       const qcRaw = String(pm.validasiQC || pm.statusQC || 'Open').trim();
-      const qc = qcRaw.toLowerCase() === 'approved' ? 'Approved' : 'Open';
+      const serverQC = qcRaw.toLowerCase() === 'approved' ? 'Approved' : 'Open';
+      const key = pmQCKey(project, noPM);
+      const qc = Object.prototype.hasOwnProperty.call(pmQCOverrides, key)
+        ? pmQCOverrides[key]
+        : serverQC;
       const linkSheet = pm.linkSheet || pm.link || pm.url || '';
       const safeLink = String(linkSheet).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
 
@@ -2249,6 +2262,11 @@
 
     const value = String(select.value || 'Open').trim();
     const isApproved = value.toLowerCase() === 'approved';
+
+    const project = decodeURIComponent(select.dataset.project || '');
+    const noPM = decodeURIComponent(select.dataset.noPm || '');
+    const key = pmQCKey(project, noPM);
+    pmQCOverrides[key] = isApproved ? 'Approved' : 'Open';
 
     select.classList.toggle('approved', isApproved);
     select.classList.toggle('open', !isApproved);
