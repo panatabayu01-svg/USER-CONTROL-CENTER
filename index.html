@@ -999,6 +999,33 @@
       }
     }
 
+
+      /* =========================================================
+         PC ONLY — USER APPROVAL PM PROJECT
+         Tahap 1: tampilan + struktur. HP disembunyikan.
+         ========================================================= */
+      .pm-approval-section { margin-top: 16px; }
+      .pm-approval-section .section-title { background: linear-gradient(135deg, #063f2d 0%, #087a54 55%, #0a9b68 100%); }
+      .pm-approval-section .section-icon { color: #62ffb1; }
+      .pm-project-count { background: rgba(0,210,120,.12); border: 1px solid rgba(0,255,150,.55); color:#6fffc0; border-radius:24px; padding:10px 18px; font-weight:800; white-space:nowrap; }
+      .pm-approval-section table th, .pm-approval-section table td { text-align:center; vertical-align:middle; }
+      .pm-approval-section table th:nth-child(1), .pm-approval-section table td:nth-child(1) { width:5%; }
+      .pm-approval-section table th:nth-child(2), .pm-approval-section table td:nth-child(2) { width:26%; }
+      .pm-approval-section table th:nth-child(3), .pm-approval-section table td:nth-child(3) { width:10%; }
+      .pm-approval-section table th:nth-child(4), .pm-approval-section table td:nth-child(4) { width:12%; }
+      .pm-approval-section table th:nth-child(5), .pm-approval-section table td:nth-child(5) { width:13%; }
+      .pm-approval-section table th:nth-child(6), .pm-approval-section table td:nth-child(6) { width:14%; }
+      .pm-approval-section table th:nth-child(7), .pm-approval-section table td:nth-child(7) { width:20%; }
+      .pm-status-open, .pm-status-close { display:inline-flex; align-items:center; justify-content:center; min-width:92px; padding:6px 13px; border-radius:18px; font-weight:800; font-size:13px; }
+      .pm-status-open { background:#0b9b50; color:#fff; }
+      .pm-status-close { background:#e53935; color:#fff; }
+      .pm-action-wrap { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:nowrap; }
+      .pm-approved-btn, .pm-open-btn { border:0; border-radius:7px; padding:8px 12px; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; }
+      .pm-approved-btn { background:linear-gradient(135deg,#00a85a,#008947); color:#fff; }
+      .pm-open-btn { background:linear-gradient(135deg,#087bd1,#0754a6); color:#fff; }
+      .pm-approved-btn:disabled, .pm-open-btn:disabled { opacity:.55; cursor:not-allowed; }
+      .pm-empty { padding:28px !important; color:#69b9ff; text-align:center !important; }
+
     /* ================================
        MOBILE — PRO COMPACT / NO HORIZONTAL SCROLL
        Hanya mempengaruhi layar <= 800px.
@@ -1006,6 +1033,8 @@
        ================================ */
 
     @media (max-width: 800px) {
+
+      .pm-approval-section { display:none !important; }
 
       html,
       body {
@@ -1788,8 +1817,42 @@
 
     </div>
 
-  </div>
 
+    <!-- ================================
+         USER APPROVAL PM PROJECT
+         PC ONLY — tahap 1
+         ================================ -->
+
+    <div class="section pm-approval-section">
+      <div class="section-title green">
+        <div class="section-title-left">
+          <div class="section-icon">🟢</div>
+          <div>USER APPROVAL PM PROJECT</div>
+        </div>
+        <div class="pm-project-count">Total PM Project: <span id="pmProjectCount">0</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="no">No</th>
+              <th>Project</th>
+              <th>No PM Terakhir</th>
+              <th>Tgl PM</th>
+              <th>Tgl Approved</th>
+              <th>Validasi QC</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="pmProjectBody">
+            <tr><td colspan="7" class="pm-empty">Memuat data PM Project...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+  </div>
 
 
   <!-- POPUP DATABASE USER -->
@@ -1975,6 +2038,65 @@
     });
   }
 
+
+
+  // ==========================================
+  // USER APPROVAL PM PROJECT
+  // ==========================================
+
+  function renderPMProjects(data) {
+    const body = document.getElementById('pmProjectBody');
+    const countEl = document.getElementById('pmProjectCount');
+    if (!body) return;
+    const rows = Array.isArray(data) ? data : [];
+    if (countEl) countEl.textContent = rows.length;
+    body.innerHTML = '';
+    if (!rows.length) {
+      body.innerHTML = `<tr><td colspan="7" class="pm-empty">Belum ada data USER APPROVAL PM PROJECT.</td></tr>`;
+      return;
+    }
+    rows.forEach(function(pm,index) {
+      const project = pm.project || pm.proyek || '-';
+      const noPM = pm.noPM || pm.noPm || pm.pmTerakhir || '-';
+      const tglPM = pm.tglPM || pm.tanggalPM || '-';
+      const tglApproved = pm.tglApproved || pm.tanggalApproved || '-';
+      const qc = String(pm.validasiQC || pm.statusQC || 'Open').trim();
+      const linkSheet = pm.linkSheet || pm.link || pm.url || '';
+      const qcOpen = qc.toLowerCase() !== 'close' && qc.toLowerCase() !== 'closed';
+      const safeLink = String(linkSheet).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="no">${index+1}</td>
+        <td><strong>${escapeHtml(project)}</strong></td>
+        <td>${escapeHtml(noPM)}</td>
+        <td>${escapeHtml(tglPM)}</td>
+        <td>${escapeHtml(tglApproved)}</td>
+        <td><span class="${qcOpen?'pm-status-open':'pm-status-close'}">${escapeHtml(qc || 'Open')}</span></td>
+        <td><div class="pm-action-wrap">
+          <button class="pm-approved-btn" type="button" onclick="approvePMProject(this,'${encodeURIComponent(project)}','${encodeURIComponent(noPM)}')">✓ Approved</button>
+          <button class="pm-open-btn" type="button" ${linkSheet?'':'disabled'} data-link="${safeLink}" onclick="openPMProject(this)">📁 Open</button>
+        </div></td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  function openPMProject(button) {
+    const link = button && button.dataset ? button.dataset.link : '';
+    if (!link) { alert('Link sheet proyek belum tersedia.'); return; }
+    window.open(link,'_blank','noopener,noreferrer');
+  }
+
+  function approvePMProject(button, project, noPM) {
+    project=decodeURIComponent(project||'');
+    noPM=decodeURIComponent(noPM||'');
+    if (!confirm('Approve PM project "'+project+'" ('+noPM+')?')) return;
+    button.disabled=true;
+    apiCall('approvePM',{project:project,noPM:noPM})
+      .then(function(){ alert('✅ PM project berhasil APPROVED.'); loadData(); })
+      .catch(function(error){ button.disabled=false; alert('Gagal Approve PM:\n'+(error.message||error)); });
+  }
+
+
   // ==========================================
   // LOAD DATA
   // ==========================================
@@ -1991,6 +2113,7 @@
 
         renderActive(data.active || []);
         renderPending(data.pending || []);
+        renderPMProjects(data.pmProjects || []);
 
         document.getElementById('pendingCount').textContent =
           (data.pending || []).length;
@@ -2422,6 +2545,7 @@
 
         renderActive(data.active || []);
         renderPending(data.pending || []);
+        renderPMProjects(data.pmProjects || []);
 
         const pendingCount =
           document.getElementById('pendingCount');
