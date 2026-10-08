@@ -1083,20 +1083,99 @@
       .pm-approval-section .section-title { min-height:52px; padding:9px 10px; font-size:14px; }
       .pm-approval-section .section-title-left > div:last-child { max-width:220px; }
       .pm-approval-section .pm-project-count { padding:7px 9px; font-size:10px; }
-      .pm-approval-section .table-wrap { padding:6px 5px 8px; overflow-x:hidden !important; }
-      .pm-approval-section table { width:100% !important; table-layout:fixed !important; }
-      .pm-approval-section table th { padding:7px 2px; font-size:8.5px; }
-      .pm-approval-section table td { padding:6px 2px; font-size:9px; min-height:52px; }
-      .pm-approval-section table th:nth-child(1), .pm-approval-section table td:nth-child(1) { width:6%; }
-      .pm-approval-section table th:nth-child(2), .pm-approval-section table td:nth-child(2) { width:27%; }
-      .pm-approval-section table th:nth-child(3), .pm-approval-section table td:nth-child(3) { width:13%; }
-      .pm-approval-section table th:nth-child(4), .pm-approval-section table td:nth-child(4) { width:17%; }
-      .pm-approval-section table th:nth-child(5), .pm-approval-section table td:nth-child(5) { width:16%; }
-      .pm-approval-section table th:nth-child(6), .pm-approval-section table td:nth-child(6) { width:21%; }
-      .pm-qc-select { width:100%; min-width:0; padding:6px 16px 6px 4px; border-radius:14px; font-size:8.5px; }
-      .pm-action-wrap { gap:3px; }
-      .pm-status-btn, .pm-sheet-btn { min-width:0; padding:6px 3px; border-radius:6px; font-size:8px; line-height:1.05; flex:1 1 0; }
-      .pm-sheet-btn { min-width:0; }
+
+      /* HP: tabel dibuat lebih seimbang agar Validasi QC dan Aksi tidak terpotong */
+      .pm-approval-section .table-wrap {
+        padding:6px 5px 8px;
+        overflow-x:hidden !important;
+      }
+      .pm-approval-section table {
+        width:100% !important;
+        max-width:100% !important;
+        table-layout:fixed !important;
+      }
+      .pm-approval-section table th {
+        padding:7px 2px;
+        font-size:8.3px;
+        line-height:1.05;
+        white-space:normal;
+      }
+      .pm-approval-section table td {
+        padding:7px 2px;
+        font-size:8.7px;
+        line-height:1.12;
+        min-height:52px;
+        overflow:hidden;
+      }
+
+      /* Lebar kolom khusus HP — prioritas ruang untuk QC + Aksi */
+      .pm-approval-section table th:nth-child(1),
+      .pm-approval-section table td:nth-child(1) { width:5.5%; }
+
+      .pm-approval-section table th:nth-child(2),
+      .pm-approval-section table td:nth-child(2) {
+        width:23%;
+        overflow-wrap:anywhere;
+        word-break:normal;
+      }
+
+      .pm-approval-section table th:nth-child(3),
+      .pm-approval-section table td:nth-child(3) { width:11%; }
+
+      .pm-approval-section table th:nth-child(4),
+      .pm-approval-section table td:nth-child(4) { width:15%; }
+
+      .pm-approval-section table th:nth-child(5),
+      .pm-approval-section table td:nth-child(5) { width:18.5%; }
+
+      .pm-approval-section table th:nth-child(6),
+      .pm-approval-section table td:nth-child(6) { width:27%; }
+
+      /* Dropdown QC tetap utuh di dalam kolom */
+      .pm-qc-select {
+        display:block;
+        width:100%;
+        min-width:0;
+        max-width:100%;
+        box-sizing:border-box;
+        padding:6px 17px 6px 4px;
+        border-radius:14px;
+        font-size:8.2px;
+        line-height:1;
+        white-space:nowrap;
+      }
+
+      /* Dua tombol Aksi selalu muat dalam satu baris */
+      .pm-action-wrap {
+        width:100%;
+        min-width:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:3px;
+        flex-wrap:nowrap;
+      }
+
+      .pm-status-btn,
+      .pm-sheet-btn {
+        min-width:0 !important;
+        box-sizing:border-box;
+        padding:6px 3px;
+        border-radius:6px;
+        font-size:7.8px;
+        line-height:1.05;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:clip;
+      }
+
+      .pm-status-btn {
+        flex:1.2 1 0;
+      }
+
+      .pm-sheet-btn {
+        flex:.8 1 0;
+      }
 
       html,
       body {
