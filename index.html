@@ -1002,7 +1002,11 @@
 
       /* =========================================================
          PC ONLY — USER APPROVAL PM PROJECT
-         Tahap 1: tampilan + struktur. HP disembunyikan.
+         Tampilan tahap 2:
+         - Tgl Approved dihilangkan
+         - Validasi QC menjadi dropdown Open / Approved
+         - Aksi mengikuti nilai dropdown
+         - HP tetap tidak disentuh
          ========================================================= */
       .pm-approval-section { margin-top: 16px; }
       .pm-approval-section .section-title { background: linear-gradient(135deg, #063f2d 0%, #087a54 55%, #0a9b68 100%); }
@@ -1010,23 +1014,59 @@
       .pm-project-count { background: rgba(0,210,120,.12); border: 1px solid rgba(0,255,150,.55); color:#6fffc0; border-radius:24px; padding:10px 18px; font-weight:800; white-space:nowrap; }
       .pm-approval-section table th, .pm-approval-section table td { text-align:center; vertical-align:middle; }
       .pm-approval-section table th:nth-child(1), .pm-approval-section table td:nth-child(1) { width:5%; }
-      .pm-approval-section table th:nth-child(2), .pm-approval-section table td:nth-child(2) { width:26%; }
-      .pm-approval-section table th:nth-child(3), .pm-approval-section table td:nth-child(3) { width:10%; }
-      .pm-approval-section table th:nth-child(4), .pm-approval-section table td:nth-child(4) { width:12%; }
-      .pm-approval-section table th:nth-child(5), .pm-approval-section table td:nth-child(5) { width:13%; }
-      .pm-approval-section table th:nth-child(6), .pm-approval-section table td:nth-child(6) { width:14%; }
-      .pm-approval-section table th:nth-child(7), .pm-approval-section table td:nth-child(7) { width:20%; }
-      .pm-status-open, .pm-status-close { display:inline-flex; align-items:center; justify-content:center; min-width:92px; padding:6px 13px; border-radius:18px; font-weight:800; font-size:13px; }
-      .pm-status-open { background:#0b9b50; color:#fff; }
-      .pm-status-close { background:#e53935; color:#fff; }
+      .pm-approval-section table th:nth-child(2), .pm-approval-section table td:nth-child(2) { width:30%; }
+      .pm-approval-section table th:nth-child(3), .pm-approval-section table td:nth-child(3) { width:11%; }
+      .pm-approval-section table th:nth-child(4), .pm-approval-section table td:nth-child(4) { width:13%; }
+      .pm-approval-section table th:nth-child(5), .pm-approval-section table td:nth-child(5) { width:16%; }
+      .pm-approval-section table th:nth-child(6), .pm-approval-section table td:nth-child(6) { width:25%; }
+
+      .pm-qc-select {
+        min-width:112px;
+        padding:7px 28px 7px 12px;
+        border-radius:18px;
+        border:1px solid rgba(0,255,150,.55);
+        background:#0b9b50;
+        color:#fff;
+        font-weight:800;
+        font-size:13px;
+        text-align:center;
+        text-align-last:center;
+        cursor:pointer;
+        outline:none;
+      }
+      .pm-qc-select.approved {
+        background:#e53935;
+        border-color:#ff8a80;
+      }
+      .pm-qc-select.open {
+        background:#0b9b50;
+        border-color:#62ffb1;
+      }
+      .pm-qc-select option {
+        background:#07314f;
+        color:#fff;
+        font-weight:700;
+      }
+
       .pm-action-wrap { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:nowrap; }
-      .pm-approved-btn, .pm-open-btn { border:0; border-radius:7px; padding:8px 12px; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; }
-      .pm-approved-btn { background:linear-gradient(135deg,#00a85a,#008947); color:#fff; }
-      .pm-open-btn { background:linear-gradient(135deg,#087bd1,#0754a6); color:#fff; }
-      .pm-approved-btn:disabled, .pm-open-btn:disabled { opacity:.55; cursor:not-allowed; }
+      .pm-action-btn {
+        border:0;
+        border-radius:7px;
+        min-width:108px;
+        padding:8px 12px;
+        font-size:13px;
+        font-weight:800;
+        cursor:pointer;
+        white-space:nowrap;
+        color:#fff;
+      }
+      .pm-action-btn.approved { background:linear-gradient(135deg,#e53935,#c62828); }
+      .pm-action-btn.open { background:linear-gradient(135deg,#00a85a,#008947); }
+      .pm-action-btn:disabled { opacity:.55; cursor:not-allowed; }
       .pm-empty { padding:28px !important; color:#69b9ff; text-align:center !important; }
 
-    /* ================================
+
+/* ================================
        MOBILE — PRO COMPACT / NO HORIZONTAL SCROLL
        Hanya mempengaruhi layar <= 800px.
        Tampilan PC tidak diubah.
@@ -1820,7 +1860,7 @@
 
     <!-- ================================
          USER APPROVAL PM PROJECT
-         PC ONLY — tahap 1
+         PC ONLY — tampilan tahap 2
          ================================ -->
 
     <div class="section pm-approval-section">
@@ -1839,13 +1879,11 @@
               <th>Project</th>
               <th>No PM Terakhir</th>
               <th>Tgl PM Terakhir</th>
-              <th>Tgl Approved</th>
-              <th>Validasi QC</th>
-              <th>Aksi</th>
+              <th>Validasi QC</th><th>Aksi</th>
             </tr>
           </thead>
           <tbody id="pmProjectBody">
-            <tr><td colspan="7" class="pm-empty">Memuat data PM Project...</td></tr>
+            <tr><td colspan="6" class="pm-empty">Memuat data PM Project...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2048,36 +2086,78 @@
     const body = document.getElementById('pmProjectBody');
     const countEl = document.getElementById('pmProjectCount');
     if (!body) return;
+
     const rows = Array.isArray(data) ? data : [];
     if (countEl) countEl.textContent = rows.length;
+
     body.innerHTML = '';
+
     if (!rows.length) {
-      body.innerHTML = `<tr><td colspan="7" class="pm-empty">Belum ada data USER APPROVAL PM PROJECT.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6" class="pm-empty">Belum ada data USER APPROVAL PM PROJECT.</td></tr>`;
       return;
     }
+
     rows.forEach(function(pm,index) {
       const project = pm.project || pm.proyek || '-';
       const noPM = pm.noPM || pm.noPm || pm.pmTerakhir || '-';
       const tglPM = pm.tglPM || pm.tanggalPM || '-';
-      const tglApproved = pm.tglApproved || pm.tanggalApproved || '-';
-      const qc = String(pm.validasiQC || pm.statusQC || 'Open').trim();
+      const qcRaw = String(pm.validasiQC || pm.statusQC || 'Open').trim();
+      const qc = qcRaw.toLowerCase() === 'approved' ? 'Approved' : 'Open';
       const linkSheet = pm.linkSheet || pm.link || pm.url || '';
-      const qcOpen = qc.toLowerCase() !== 'close' && qc.toLowerCase() !== 'closed';
       const safeLink = String(linkSheet).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+
       const tr = document.createElement('tr');
+
       tr.innerHTML = `
         <td class="no">${index+1}</td>
         <td><strong>${escapeHtml(project)}</strong></td>
         <td>${escapeHtml(noPM)}</td>
         <td>${escapeHtml(tglPM)}</td>
-        <td>${escapeHtml(tglApproved)}</td>
-        <td><span class="${qcOpen?'pm-status-open':'pm-status-close'}">${escapeHtml(qc || 'Open')}</span></td>
-        <td><div class="pm-action-wrap">
-          <button class="pm-approved-btn" type="button" onclick="approvePMProject(this,'${encodeURIComponent(project)}','${encodeURIComponent(noPM)}')">✓ Approved</button>
-          <button class="pm-open-btn" type="button" ${linkSheet?'':'disabled'} data-link="${safeLink}" onclick="openPMProject(this)">📁 Open</button>
-        </div></td>`;
+        <td>
+          <select
+            class="pm-qc-select ${qc === 'Approved' ? 'approved' : 'open'}"
+            data-project="${encodeURIComponent(project)}"
+            data-no-pm="${encodeURIComponent(noPM)}"
+            onchange="changePMQC(this)">
+            <option value="Open" ${qc === 'Open' ? 'selected' : ''}>Open</option>
+            <option value="Approved" ${qc === 'Approved' ? 'selected' : ''}>Approved</option>
+          </select>
+        </td>
+        <td>
+          <div class="pm-action-wrap">
+            <button
+              class="pm-action-btn ${qc === 'Approved' ? 'approved' : 'open'}"
+              type="button"
+              ${linkSheet ? '' : 'disabled'}
+              data-link="${safeLink}"
+              onclick="openPMProject(this)">
+              ${qc === 'Approved' ? '✓ Approved' : '📁 Open'}
+            </button>
+          </div>
+        </td>`;
+
       body.appendChild(tr);
     });
+  }
+
+  function changePMQC(select) {
+    if (!select) return;
+
+    const value = String(select.value || 'Open').trim();
+    const isApproved = value.toLowerCase() === 'approved';
+
+    select.classList.toggle('approved', isApproved);
+    select.classList.toggle('open', !isApproved);
+
+    const row = select.closest('tr');
+    if (!row) return;
+
+    const actionButton = row.querySelector('.pm-action-btn');
+    if (!actionButton) return;
+
+    actionButton.classList.toggle('approved', isApproved);
+    actionButton.classList.toggle('open', !isApproved);
+    actionButton.innerHTML = isApproved ? '✓ Approved' : '📁 Open';
   }
 
   function openPMProject(button) {
