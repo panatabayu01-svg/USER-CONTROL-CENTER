@@ -2214,7 +2214,16 @@
       const qcRaw = String(pm.validasiQC || pm.statusQC || 'Open').trim();
       const serverQC = qcRaw.toLowerCase() === 'approved' ? 'Approved' : 'Open';
       const key = pmQCKey(project, noPM);
-      const qc = Object.prototype.hasOwnProperty.call(pmQCOverrides, key)
+      const hasOverride = Object.prototype.hasOwnProperty.call(pmQCOverrides, key);
+      const overrideQC = hasOverride ? pmQCOverrides[key] : '';
+
+      // Jika server sudah menyimpan pilihan yang sama, override lokal
+      // tidak diperlukan lagi. Ini membuat auto-refresh kembali normal.
+      if (hasOverride && serverQC === overrideQC) {
+        delete pmQCOverrides[key];
+      }
+
+      const qc = hasOverride && Object.prototype.hasOwnProperty.call(pmQCOverrides, key)
         ? pmQCOverrides[key]
         : serverQC;
       const linkSheet = pm.linkSheet || pm.link || pm.url || '';
@@ -2232,6 +2241,7 @@
             class="pm-qc-select ${qc === 'Approved' ? 'approved' : 'open'}"
             data-project="${encodeURIComponent(project)}"
             data-no-pm="${encodeURIComponent(noPM)}"
+            data-current-qc="${qc}"
             onchange="changePMQC(this)">
             <option value="Open" ${qc === 'Open' ? 'selected' : ''}>Open</option>
             <option value="Approved" ${qc === 'Approved' ? 'selected' : ''}>Approved</option>
@@ -2262,24 +2272,66 @@
 
     const value = String(select.value || 'Open').trim();
     const isApproved = value.toLowerCase() === 'approved';
+    const newQC = isApproved ? 'Approved' : 'Open';
 
     const project = decodeURIComponent(select.dataset.project || '');
     const noPM = decodeURIComponent(select.dataset.noPm || '');
     const key = pmQCKey(project, noPM);
-    pmQCOverrides[key] = isApproved ? 'Approved' : 'Open';
+
+    // Simpan pilihan lokal terlebih dahulu agar auto-refresh 10 detik
+    // tidak mengembalikan tampilan ke status lama selama proses simpan.
+    const previousQC = Object.prototype.hasOwnProperty.call(pmQCOverrides, key)
+      ? pmQCOverrides[key]
+      : (select.dataset.currentQc || 'Open');
+    pmQCOverrides[key] = newQC;
 
     select.classList.toggle('approved', isApproved);
     select.classList.toggle('open', !isApproved);
+    select.dataset.currentQc = newQC;
+    select.disabled = true;
 
     const row = select.closest('tr');
-    if (!row) return;
+    const statusButton = row ? row.querySelector('.pm-status-btn') : null;
 
-    const statusButton = row.querySelector('.pm-status-btn');
-    if (!statusButton) return;
+    if (statusButton) {
+      statusButton.classList.toggle('approved', isApproved);
+      statusButton.classList.toggle('open', !isApproved);
+      statusButton.innerHTML = isApproved ? '✓ Approved' : 'Open';
+    }
 
-    statusButton.classList.toggle('approved', isApproved);
-    statusButton.classList.toggle('open', !isApproved);
-    statusButton.innerHTML = isApproved ? '✓ Approved' : 'Open';
+    // Kirim pilihan dropdown ke Code.gs.
+    apiCall('updatePMQC', {
+      project: project,
+      noPM: noPM,
+      statusQC: newQC
+    })
+      .then(function() {
+        // Server sudah menyimpan nilai. Hapus override lokal sehingga
+        // refresh berikutnya membaca status langsung dari sheet project.
+        delete pmQCOverrides[key];
+        select.disabled = false;
+        select.dataset.currentQc = newQC;
+      })
+      .catch(function(error) {
+        // Jika gagal, kembalikan ke pilihan sebelum perubahan.
+        const restoreApproved = String(previousQC).toLowerCase() === 'approved';
+        delete pmQCOverrides[key];
+
+        select.value = restoreApproved ? 'Approved' : 'Open';
+        select.classList.toggle('approved', restoreApproved);
+        select.classList.toggle('open', !restoreApproved);
+        select.dataset.currentQc = restoreApproved ? 'Approved' : 'Open';
+        select.disabled = false;
+
+        if (statusButton) {
+          statusButton.classList.toggle('approved', restoreApproved);
+          statusButton.classList.toggle('open', !restoreApproved);
+          statusButton.innerHTML = restoreApproved ? '✓ Approved' : 'Open';
+        }
+
+        alert('Gagal menyimpan VALIDASI QC untuk project "' + project + '".\n\n' +
+          (error && error.message ? error.message : error));
+      });
   }
 
   function openPMProject(button) {
