@@ -2230,10 +2230,12 @@
       const safeLink = String(linkSheet).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
 
       const tr = document.createElement('tr');
+      const hasPMNumber = noPM && noPM !== '-';
+      const projectNameColor = hasPMNumber && qc !== 'Approved' ? '#ff4d4f' : '#ffffff';
 
       tr.innerHTML = `
         <td class="no">${index+1}</td>
-        <td><strong>${escapeHtml(project)}</strong></td>
+        <td><strong style="color:${projectNameColor}">${escapeHtml(project)}</strong></td>
         <td>${escapeHtml(noPM)}</td>
         <td>${escapeHtml(tglPM)}</td>
         <td>
