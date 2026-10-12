@@ -2143,13 +2143,13 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycbzMxMKTpS67QUTPcicJ48e_miLpc8p2NPHjZASXxpiMPYpdPxP4h3UtmCR2QvkWr3IYBQ/exec';
 
   function apiCall(api, params, retryCount) {
-    // Percobaan ulang bertahap untuk browser PC/PWA yang lambat menerima
-    // redirect respons JSONP dari Google Apps Script.
+    // Komunikasi JSONP dibuat lebih tahan untuk browser PC dan aplikasi PWA.
+    // UI, endpoint, dan kontrak data tetap mengikuti index GitHub terbaru.
     const attempt = Number(retryCount || 0);
     const maxRetries = 2;
 
     return new Promise(function(resolve, reject) {
-      const callbackName = 'uccCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+      const callbackName = 'uccCallback_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
       const script = document.createElement('script');
       let settled = false;
       let timeoutId = null;
@@ -2159,7 +2159,8 @@
           clearTimeout(timeoutId);
           timeoutId = null;
         }
-        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        try { delete window[callbackName]; }
+        catch (e) { window[callbackName] = undefined; }
         if (script.parentNode) script.parentNode.removeChild(script);
       }
 
@@ -2167,11 +2168,10 @@
         if (settled) return;
         settled = true;
         cleanup();
-
         if (attempt < maxRetries) {
           window.setTimeout(function() {
             apiCall(api, params, attempt + 1).then(resolve).catch(reject);
-          }, 500 * (attempt + 1));
+          }, 700 * (attempt + 1));
           return;
         }
         reject(error instanceof Error ? error : new Error(String(error || 'Permintaan ke server gagal.')));
@@ -2188,22 +2188,23 @@
         resolve(result);
       };
 
+      script.async = true;
       script.onerror = function() {
         fail(new Error('Tidak dapat memuat respons Apps Script dari browser ini.'));
       };
 
-      // Hindari permintaan menggantung tanpa batas bila callback tidak kembali.
-      timeoutId = setTimeout(function() {
+      // Timeout sedikit lebih panjang untuk redirect Google Apps Script pada PWA PC.
+      timeoutId = window.setTimeout(function() {
         fail(new Error('Waktu koneksi Apps Script habis. Coba muat ulang aplikasi.'));
       }, 35000);
 
       const query = new URLSearchParams(params || {});
       query.set('api', api);
       query.set('callback', callbackName);
-      query.set('ts', Date.now());
-
-      script.src = API_URL + '?' + query.toString();
-      document.body.appendChild(script);
+      query.set('_ucc_ts', String(Date.now()));
+      query.set('_ucc_attempt', String(attempt));
+      script.src = API_URL + (API_URL.indexOf('?') === -1 ? '?' : '&') + query.toString();
+      document.head.appendChild(script);
     });
   }
 
@@ -2386,7 +2387,7 @@
 
   // Cache data terakhir hanya untuk mempercepat tampilan awal.
   // Data tetap diperbarui dari server segera setelah aplikasi mulai.
-  const UCC_STARTUP_CACHE_KEY = 'ucc_startup_data_v2';
+  const UCC_STARTUP_CACHE_KEY = 'ucc_startup_data_v1';
 
   function renderAllData(data) {
     data = data || {};
