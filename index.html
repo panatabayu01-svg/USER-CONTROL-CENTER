@@ -2143,9 +2143,10 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycbzMxMKTpS67QUTPcicJ48e_miLpc8p2NPHjZASXxpiMPYpdPxP4h3UtmCR2QvkWr3IYBQ/exec';
 
   function apiCall(api, params, retryCount) {
-    // Retry satu kali untuk mengatasi kegagalan JSONP sementara pada browser PC.
-    // Endpoint dan format callback tetap sama; Code.gs tidak diubah.
+    // Percobaan ulang bertahap untuk browser PC/PWA yang lambat menerima
+    // redirect respons JSONP dari Google Apps Script.
     const attempt = Number(retryCount || 0);
+    const maxRetries = 2;
 
     return new Promise(function(resolve, reject) {
       const callbackName = 'uccCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
@@ -2167,8 +2168,10 @@
         settled = true;
         cleanup();
 
-        if (attempt < 1) {
-          apiCall(api, params, attempt + 1).then(resolve).catch(reject);
+        if (attempt < maxRetries) {
+          window.setTimeout(function() {
+            apiCall(api, params, attempt + 1).then(resolve).catch(reject);
+          }, 500 * (attempt + 1));
           return;
         }
         reject(error instanceof Error ? error : new Error(String(error || 'Permintaan ke server gagal.')));
@@ -2192,7 +2195,7 @@
       // Hindari permintaan menggantung tanpa batas bila callback tidak kembali.
       timeoutId = setTimeout(function() {
         fail(new Error('Waktu koneksi Apps Script habis. Coba muat ulang aplikasi.'));
-      }, 20000);
+      }, 35000);
 
       const query = new URLSearchParams(params || {});
       query.set('api', api);
@@ -2383,7 +2386,7 @@
 
   // Cache data terakhir hanya untuk mempercepat tampilan awal.
   // Data tetap diperbarui dari server segera setelah aplikasi mulai.
-  const UCC_STARTUP_CACHE_KEY = 'ucc_startup_data_v1';
+  const UCC_STARTUP_CACHE_KEY = 'ucc_startup_data_v2';
 
   function renderAllData(data) {
     data = data || {};
