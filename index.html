@@ -2142,11 +2142,41 @@
   // Komunikasi ke Apps Script dilakukan melalui JSONP.
   const API_URL = 'https://script.google.com/macros/s/AKfycbzMxMKTpS67QUTPcicJ48e_miLpc8p2NPHjZASXxpiMPYpdPxP4h3UtmCR2QvkWr3IYBQ/exec';
 
-  function apiCall(api, params) {
+  function apiCall(api, params, retryCount) {
+    // Retry satu kali untuk mengatasi kegagalan JSONP sementara pada browser PC.
+    // Endpoint dan format callback tetap sama; Code.gs tidak diubah.
+    const attempt = Number(retryCount || 0);
+
     return new Promise(function(resolve, reject) {
       const callbackName = 'uccCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+      const script = document.createElement('script');
+      let settled = false;
+      let timeoutId = null;
+
+      function cleanup() {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      function fail(error) {
+        if (settled) return;
+        settled = true;
+        cleanup();
+
+        if (attempt < 1) {
+          apiCall(api, params, attempt + 1).then(resolve).catch(reject);
+          return;
+        }
+        reject(error instanceof Error ? error : new Error(String(error || 'Permintaan ke server gagal.')));
+      }
 
       window[callbackName] = function(result) {
+        if (settled) return;
+        settled = true;
         cleanup();
         if (result && result.success === false) {
           reject(new Error(result.error || 'Request gagal.'));
@@ -2155,17 +2185,14 @@
         resolve(result);
       };
 
-      const script = document.createElement('script');
-
-      function cleanup() {
-        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
-        if (script.parentNode) script.parentNode.removeChild(script);
-      }
-
       script.onerror = function() {
-        cleanup();
-        reject(new Error('Tidak dapat terhubung ke server Apps Script.'));
+        fail(new Error('Tidak dapat memuat respons Apps Script dari browser ini.'));
       };
+
+      // Hindari permintaan menggantung tanpa batas bila callback tidak kembali.
+      timeoutId = setTimeout(function() {
+        fail(new Error('Waktu koneksi Apps Script habis. Coba muat ulang aplikasi.'));
+      }, 20000);
 
       const query = new URLSearchParams(params || {});
       query.set('api', api);
@@ -2178,8 +2205,6 @@
   }
 
 
-
-  // ==========================================
   // USER APPROVAL PM PROJECT
   // ==========================================
 
