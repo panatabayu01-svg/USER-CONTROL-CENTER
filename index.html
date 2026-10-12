@@ -2228,14 +2228,13 @@
         : serverQC;
       const linkSheet = pm.linkSheet || pm.link || pm.url || '';
       const safeLink = String(linkSheet).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      const pmPendingApproval = pm.pmPendingApproval === true;
 
       const tr = document.createElement('tr');
-      const hasPMNumber = noPM && noPM !== '-';
-      const projectNameColor = hasPMNumber && qc !== 'Approved' ? '#ff4d4f' : '#ffffff';
 
       tr.innerHTML = `
         <td class="no">${index+1}</td>
-        <td><strong style="color:${projectNameColor}">${escapeHtml(project)}</strong></td>
+        <td><strong style="color:${pmPendingApproval ? '#ff2d25' : '#ffffff'}">${escapeHtml(project)}</strong></td>
         <td>${escapeHtml(noPM)}</td>
         <td>${escapeHtml(tglPM)}</td>
         <td>
