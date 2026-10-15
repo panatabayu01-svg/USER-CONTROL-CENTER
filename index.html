@@ -2271,6 +2271,7 @@
             class="pm-qc-select ${qc === 'Approved' ? 'approved' : 'open'}"
             data-project="${encodeURIComponent(project)}"
             data-no-pm="${encodeURIComponent(noPM)}"
+            data-tgl-pm="${encodeURIComponent(tglPM)}"
             data-current-qc="${qc}"
             onchange="changePMQC(this)">
             <option value="Open" ${qc === 'Open' ? 'selected' : ''}>Open</option>
@@ -2306,6 +2307,7 @@
 
     const project = decodeURIComponent(select.dataset.project || '');
     const noPM = decodeURIComponent(select.dataset.noPm || '');
+    const tglPM = decodeURIComponent(select.dataset.tglPm || '');
     const key = pmQCKey(project, noPM);
 
     // Simpan pilihan lokal terlebih dahulu agar auto-refresh 10 detik
@@ -2333,6 +2335,7 @@
     apiCall('updatePMQC', {
       project: project,
       noPM: noPM,
+      tglPM: tglPM,
       statusQC: newQC
     })
       .then(function() {
